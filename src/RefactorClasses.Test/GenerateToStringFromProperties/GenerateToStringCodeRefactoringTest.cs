@@ -198,7 +198,7 @@ public class Class2<T>
 
     public int Klo { get; }
 
-    public override string ToString() => $""{nameof(Class2)} EnumProp={EnumProp} Prop1={Prop1} Klo={Klo}"";
+    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp} {nameof(Prop1)}={Prop1} {nameof(Klo)}={Klo}"";
 }
 ";
 
@@ -219,7 +219,7 @@ public class Class2<T>
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_ConstructorWithNotAllProperties_IsReplaced_WithCompleteOne()
+        public async Task Class_WithSomeProperties_ToStringWithoutAllProperties_IsReplaced_WithCompleteOne()
         {
             // Arrange
             var testString = @"
@@ -236,18 +236,13 @@ public enum AnEnum1
 
 public class Class2<T>
 {
-    public Class2(AnEnum1 enumProp, int klo)
-    {
-        EnumProp = enumProp;
-        Prop1 = prop1;
-        Klo = klo;
-    }
-
     public AnEnum1 EnumProp { get; }
 
     public T Prop1 { get; }
 
     public int Klo { get; }
+
+    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp}"";
 }
 ";
             var expectedText = @"
@@ -264,18 +259,13 @@ public enum AnEnum1
 
 public class Class2<T>
 {
-    public Class2(AnEnum1 enumProp, T prop1, int klo)
-    {
-        EnumProp = enumProp;
-        Prop1 = prop1;
-        Klo = klo;
-    }
-
     public AnEnum1 EnumProp { get; }
 
     public T Prop1 { get; }
 
     public int Klo { get; }
+
+    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp} {nameof(Prop1)}={Prop1} {nameof(Klo)}={Klo}"";
 }
 ";
 

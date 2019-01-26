@@ -48,24 +48,27 @@ namespace RefactorClasses.GenerateToStringFromProperties
             IList<PropertyDeclarationSyntax> properties,
             CancellationToken cancellationToken)
         {
-            InvocationExpressionSyntax GenerateNameOfCall() =>
+            InvocationExpressionSyntax GenerateNameOfCall(SyntaxToken identifier) =>
                 ExpressionGenerationHelper.Invocation(
                     "nameof",
-                    SyntaxHelpers.ArgumentFromIdentifier(classDeclarationSyntax.Identifier));
+                    SyntaxHelpers.ArgumentFromIdentifier(identifier));
 
             var tree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
 
             if (properties.Count == 0) return document;
 
             var firstEl = Enumerable.Repeat(
-                (InterpolatedStringContentSyntax)SyntaxFactory.Interpolation(GenerateNameOfCall()),
+                (InterpolatedStringContentSyntax)SyntaxFactory.Interpolation(
+                    GenerateNameOfCall(classDeclarationSyntax.Identifier)),
                 1);
             var interpolatedStringExpression = InterpolatedStringGenerationHelper.InterpolatedString(
                 firstEl.Concat(
                     properties.SelectMany(p =>
                         new InterpolatedStringContentSyntax[]
                         {
-                            InterpolatedStringGenerationHelper.Text($" {p.Identifier.WithoutTrivia().ValueText}="),
+                            InterpolatedStringGenerationHelper.Text($" "),
+                            SyntaxFactory.Interpolation(GenerateNameOfCall(p.Identifier)),
+                            InterpolatedStringGenerationHelper.Text($"="),
                             SyntaxFactory.Interpolation(SyntaxFactory.IdentifierName(p.Identifier.WithoutTrivia()))
                         })));
 

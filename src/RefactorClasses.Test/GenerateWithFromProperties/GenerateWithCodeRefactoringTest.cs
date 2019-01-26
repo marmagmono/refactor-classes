@@ -5,38 +5,23 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RefactorClasses.Test.Samples;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TestHelper;
 
-namespace RefactorClasses.Test.GenerateConstructorFromProperties
+namespace RefactorClasses.Test.GenerateWithFromProperties
 {
     [TestClass]
-    public class GenerateConstructorCodeRefactoringTest : DiagnosticVerifier
+    public class GenerateWithCodeRefactoringTest : DiagnosticVerifier
     {
         [TestMethod]
         public async Task Class_Empty_IsIgnored()
         {
             // Arrange
             var testString = ClassSamples.EmptyClass;
-
-            CodeAction registeredAction = null;
-            var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
-            var sut = CreateSut();
-
-            // Act
-            await sut.ComputeRefactoringsAsync(context);
-
-            // Assert
-            Assert.IsNull(registeredAction);
-        }
-
-        [TestMethod]
-        public async Task Class_WithTwoNonTrivialConstructors_IsIgnored()
-        {
-            // Arrange
-            var testString = ClassSamples.ClassWithTwoNonTrivialConstructors;
 
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
@@ -169,7 +154,7 @@ namespace RefactorClasses.Test.GenerateConstructorFromProperties
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_ConstructorMatchingPropertiesIsGenerated()
+        public async Task Class_WithSomeProperties_ToStringMatchingPropertiesIsGenerated()
         {
             // Arrange
             var testString = @"
@@ -213,12 +198,7 @@ public class Class2<T>
 
     public int Klo { get; }
 
-    public Class2(AnEnum1 enumProp, T prop1, int klo)
-    {
-        EnumProp = enumProp;
-        Prop1 = prop1;
-        Klo = klo;
-    }
+    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp} {nameof(Prop1)}={Prop1} {nameof(Klo)}={Klo}"";
 }
 ";
 
@@ -239,7 +219,7 @@ public class Class2<T>
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_ConstructorWithNotAllProperties_IsReplaced_WithCompleteOne()
+        public async Task Class_WithSomeProperties_ToStringWithoutAllProperties_IsReplaced_WithCompleteOne()
         {
             // Arrange
             var testString = @"
@@ -256,18 +236,13 @@ public enum AnEnum1
 
 public class Class2<T>
 {
-    public Class2(AnEnum1 enumProp, int klo)
-    {
-        EnumProp = enumProp;
-        Prop1 = prop1;
-        Klo = klo;
-    }
-
     public AnEnum1 EnumProp { get; }
 
     public T Prop1 { get; }
 
     public int Klo { get; }
+
+    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp}"";
 }
 ";
             var expectedText = @"
@@ -284,18 +259,13 @@ public enum AnEnum1
 
 public class Class2<T>
 {
-    public Class2(AnEnum1 enumProp, T prop1, int klo)
-    {
-        EnumProp = enumProp;
-        Prop1 = prop1;
-        Klo = klo;
-    }
-
     public AnEnum1 EnumProp { get; }
 
     public T Prop1 { get; }
 
     public int Klo { get; }
+
+    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp} {nameof(Prop1)}={Prop1} {nameof(Klo)}={Klo}"";
 }
 ";
 
@@ -322,8 +292,9 @@ public class Class2<T>
             return solution.GetDocument(originalDocument.Id);
         }
 
-        private RefactorClasses.GenerateConstructorFromProperties.RefactoringProvider CreateSut() =>
-            new RefactorClasses.GenerateConstructorFromProperties.RefactoringProvider();
+        private RefactorClasses.GenerateWithFromProperties.RefactoringProvider CreateSut() =>
+            new RefactorClasses.GenerateWithFromProperties.RefactoringProvider();
+
 
         private CodeRefactoringContext CreateRefactoringContext(
             Document document,

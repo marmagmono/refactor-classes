@@ -8,25 +8,25 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
         public static TypeSyntax Void =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword));
 
-        internal static TypeSyntax Int =>
+        public static TypeSyntax Int =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword));
 
-        internal static TypeSyntax UInt =>
+        public static TypeSyntax UInt =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.UIntKeyword));
 
-        internal static TypeSyntax Long =>
+        public static TypeSyntax Long =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.LongKeyword));
 
-        internal static TypeSyntax ULong =>
+        public static TypeSyntax ULong =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ULongKeyword));
 
-        internal static TypeSyntax Float =>
+        public static TypeSyntax Float =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.FloatKeyword));
 
-        internal static TypeSyntax Double =>
+        public static TypeSyntax Double =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.DoubleKeyword));
 
-        internal static TypeSyntax String =>
+        public static TypeSyntax String =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword));
     }
 }

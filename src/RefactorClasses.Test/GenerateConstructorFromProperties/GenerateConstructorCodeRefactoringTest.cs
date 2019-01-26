@@ -1,14 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
-using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RefactorClasses.Test.Samples;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TestHelper;
@@ -22,17 +19,8 @@ namespace ClassAnalyzer.Test
         public async Task Class_Empty_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.EmptyClass;
 
-    public class Test
-    {
-        public Test() {}
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -48,26 +36,8 @@ namespace ClassAnalyzer.Test
         public async Task Class_WithTwoNonTrivialConstructors_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.ClassWithTwoNonTrivialConstructors;
 
-    public class Test
-    {
-        public int Prop1 { get; set; }
-        public int Prop2 { get; set; }
-
-        public Test(int prop1) => Prop1 = prop1;
-
-        public Test(int prop1, int prop2)
-        {
-            Prop1 = prop1;
-            Prop2 = prop2;
-        }
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -83,18 +53,8 @@ namespace ClassAnalyzer.Test
         public async Task Class_WithoutNonStaticProperties_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.ClassWithoutNonStaticProperties;
 
-    public class Test
-    {
-        public static int klo { get; set; }
-        public static int klo4444 { get; set; }
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -110,23 +70,8 @@ namespace ClassAnalyzer.Test
         public async Task Class_WithIndexer_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.ClassWithIndexer;
 
-    public class Test
-    {
-        public int this[int t]
-        {
-            get => t;
-            set { }
-        }
-
-        public int klo { get; set; }
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -142,23 +87,8 @@ namespace ClassAnalyzer.Test
         public async Task Class_WithPropertyEvent_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.ClassWithPropertyEvent;
 
-    public class Test
-    {
-        public event EventHandler a
-        {
-            add { }
-            remove { }
-        }
-
-        public int klo { get; set; }
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -174,19 +104,8 @@ namespace ClassAnalyzer.Test
         public async Task Class_WithEventField_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.ClassWithEventField;
 
-    public class Test
-    {
-        public event EventHandler a;
-
-        public int klo { get; set; }
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -202,19 +121,8 @@ namespace ClassAnalyzer.Test
         public async Task Class_WithField_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.ClassWithField;
 
-    public class Test
-    {
-        private int a;
-
-        public int klo { get; set; }
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -230,17 +138,8 @@ namespace ClassAnalyzer.Test
         public async Task PartialClass_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.PartialClass;
 
-    public partial class Test
-    {
-        public int klo { get; set; }
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -256,17 +155,8 @@ namespace ClassAnalyzer.Test
         public async Task StaticClass_IsIgnored()
         {
             // Arrange
-            var testString = @"
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
+            var testString = ClassSamples.StaticClass;
 
-    public static class Test
-    {
-        public static int klo { get; set; }
-    }
-";
             CodeAction registeredAction = null;
             var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
             var sut = CreateSut();
@@ -425,7 +315,7 @@ public class Class2<T>
             Assert.AreEqual(expectedText, changedText);
         }
 
-        private async Task<Document> ApplyRefactoring(Document originalDocument, CodeAction codeAction)
+        public async Task<Document> ApplyRefactoring(Document originalDocument, CodeAction codeAction)
         {
             var operations = await codeAction.GetOperationsAsync(default(CancellationToken));
             var solution = operations.OfType<ApplyChangesOperation>().Single().ChangedSolution;

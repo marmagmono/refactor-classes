@@ -12,7 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ClassAnalyzer
+namespace RefactorClasses.GenerateToStringFromProperties
 {
     [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "GenerateToStringFromProperties"), Shared]
     public class RefactoringProvider : CodeRefactoringProvider

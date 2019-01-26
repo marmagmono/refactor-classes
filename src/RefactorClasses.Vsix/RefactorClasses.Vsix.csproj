@@ -58,6 +58,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RefactorClasses.RoslynUtils\RefactorClasses.RoslynUtils.csproj">
+      <Project>{702c29bb-4433-4ffb-8bfc-34a3384ec88c}</Project>
+      <Name>RefactorClasses.RoslynUtils</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RefactorClasses\RefactorClasses.csproj">
       <Project>{13B3803A-C7F7-46BD-AC53-E163181E05F9}</Project>
       <Name>RefactorClasses</Name>

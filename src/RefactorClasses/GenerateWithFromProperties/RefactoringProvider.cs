@@ -6,6 +6,7 @@ using RefactorClasses.CodeActions;
 using RefactorClasses.CodeRefactoringUtils;
 using RefactorClasses.RoslynUtils.DeclarationAnalysis;
 using RefactorClasses.RoslynUtils.DeclarationGeneration;
+using RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors;
 using System;
 using System.Collections.Generic;
 using System.Composition;
@@ -29,10 +30,26 @@ namespace RefactorClasses.GenerateWithFromProperties
                 return;
             }
 
+            var (atMostOneConstructor, nonTrivialConstructorCandidate) =
+                ClassDeclarationSyntaxAnalysis.HasAtMostOneNoneTrivialConstructor(classDeclarationSyntax);
+
+            // TODO: Unit test.
+            if (!atMostOneConstructor || nonTrivialConstructorCandidate == null) return;
+
             var properties = ClassDeclarationSyntaxAnalysis.GetPropertyDeclarations(classDeclarationSyntax).ToList();
             if (properties.Count == 0
                 || properties.Any(PropertyDeclarationSyntaxExtensions.IsStatic))
                 return;
+
+            var cancellationToken = context.CancellationToken;
+            var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+            var propertySymbols = properties.Select(p => semanticModel.GetDeclaredSymbol(p, cancellationToken));
+
+            var analyser = new ConstructorPropertyRelationshipAnalyser(
+                Array.Empty<IFieldSymbol>(),
+                propertySymbols.ToArray());
+
+            var result = analyser.Analyze(semanticModel, nonTrivialConstructorCandidate);
 
             context.RegisterRefactoring(
                 new DelegateCodeAction(

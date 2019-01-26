@@ -18,6 +18,21 @@ namespace RefactorClasses.Test.Samples
     }
 ";
 
+        public static string ClassWithoutNonTrivialConstructor => @"
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    public class Test
+    {
+        public int Prop1 { get; set; }
+        public int Prop2 { get; set; }
+
+        public Test() { }
+    }
+";
+
         public static string ClassWithTwoNonTrivialConstructors => @"
     using System;
     using System.Collections.Generic;

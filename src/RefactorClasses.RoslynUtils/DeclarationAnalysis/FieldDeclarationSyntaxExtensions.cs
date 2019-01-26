@@ -12,7 +12,7 @@ namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
         public static bool HasMultipleVariables(this FieldDeclarationSyntax fieldDeclaration) =>
             fieldDeclaration.Declaration.Variables.Count > 1;
 
-        public static string NameString(this FieldDeclarationSyntax fieldDeclaration) =>
+        public static string FirstNameString(this FieldDeclarationSyntax fieldDeclaration) =>
             fieldDeclaration.Declaration.Variables.FirstOrDefault()?.Identifier.ValueText;
     }
 }

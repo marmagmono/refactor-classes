@@ -137,6 +137,23 @@ namespace RefactorClasses.Test.GenerateWithFromProperties
         }
 
         [TestMethod]
+        public async Task Class_WithoutNonTrivialConstructor_IsIgnored()
+        {
+            // Arrange
+            var testString = ClassSamples.ClassWithoutNonTrivialConstructor;
+
+            CodeAction registeredAction = null;
+            var context = CreateRefactoringContext(testString, new TextSpan(154, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+
+            // Assert
+            Assert.IsNull(registeredAction);
+        }
+
+        [TestMethod]
         public async Task StaticClass_IsIgnored()
         {
             // Arrange
@@ -154,7 +171,7 @@ namespace RefactorClasses.Test.GenerateWithFromProperties
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_ToStringMatchingPropertiesIsGenerated()
+        public async Task Class_WithSomeProperties_WithMethodForEachPropertyIsGenerated()
         {
             // Arrange
             var testString = @"
@@ -163,14 +180,21 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-public enum AnEnum1
+internal enum AnEnum1
 {
     FirstThing,
     SecondThing = 2
 }
 
-public class Class2<T>
+internal class Class3<T> where T : class
 {
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
+    {
+        EnumProp = enumProp;
+        Klo = klo;
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+
     public AnEnum1 EnumProp { get; }
 
     public T Prop1 { get; }
@@ -198,7 +222,7 @@ public class Class2<T>
 
     public int Klo { get; }
 
-    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp} {nameof(Prop1)}={Prop1} {nameof(Klo)}={Klo}"";
+    
 }
 ";
 
@@ -219,7 +243,223 @@ public class Class2<T>
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_ToStringWithoutAllProperties_IsReplaced_WithCompleteOne()
+        public async Task Class_WithSomeProperties_WithMethodForEachPropertyIsGenerated2()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+internal enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+internal class Class3<T> where T : class
+{
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
+    {
+        EnumProp = enumProp;
+        Klo = klo != 0 ? klo : throw new Exception();
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+
+    public AnEnum1 EnumProp { get; }
+
+    public T Prop1 { get; }
+
+    public int Klo { get; }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+public class Class2<T>
+{
+    public AnEnum1 EnumProp { get; }
+
+    public T Prop1 { get; }
+
+    public int Klo { get; }
+
+    
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            var context = CreateRefactoringContext(document, new TextSpan(239, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task Class_WithSomeProperties_WithMethodForEachPropertyIsGenerated3()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+internal enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+internal class Class3<T> where T : class
+{
+    public Class3(AnEnum1 enumProp, int klo, T aaa, int abc)
+    {
+        EnumProp = enumProp;
+        Klo = klo == 0 ? klo : abc;
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+
+    public AnEnum1 EnumProp { get; }
+
+    public T Prop1 { get; }
+
+    public int Klo { get; }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+public class Class2<T>
+{
+    public AnEnum1 EnumProp { get; }
+
+    public T Prop1 { get; }
+
+    public int Klo { get; }
+
+    
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            var context = CreateRefactoringContext(document, new TextSpan(239, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task Class_WithSomeProperties_WithMethodForEachPropertyIsGenerated4()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+internal enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+internal class Class3<T> where T : class
+{
+    public Class3(AnEnum1 enumProp, int klo, T aaa, int abc)
+    {
+        EnumProp = enumProp;
+        Klo = klo != 0 ? throw new Exception() : klo;
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+
+    public AnEnum1 EnumProp { get; }
+
+    public T Prop1 { get; }
+
+    public int Klo { get; }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+public class Class2<T>
+{
+    public AnEnum1 EnumProp { get; }
+
+    public T Prop1 { get; }
+
+    public int Klo { get; }
+
+    
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            var context = CreateRefactoringContext(document, new TextSpan(239, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task Class_WithSomeProperties_ExistingWithMethods_AreReplaced_WithCompleteOne()
         {
             // Arrange
             var testString = @"

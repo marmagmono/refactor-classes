@@ -255,27 +255,38 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-public enum AnEnum1
+internal enum AnEnum1
 {
     FirstThing,
     SecondThing = 2
 }
 
-public class Class2<T>
+internal class Class3<T> where T : class
 {
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
+    {
+        EnumProp = enumProp;
+        Klo = klo;
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+
     public AnEnum1 EnumProp { get; }
 
     public T Prop1 { get; }
 
     public int Klo { get; }
 
-    
+    public Class3 WithEnumProp(AnEnum1 enumProp) => new Class3(enumProp, Klo, Prop1);
+
+    public Class3 WithProp1(T prop1) => new Class3(EnumProp, Klo, prop1);
+
+    public Class3 WithKlo(int klo) => new Class3(EnumProp, klo, Prop1);
 }
 ";
 
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(239, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(394, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act
@@ -327,27 +338,38 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-public enum AnEnum1
+internal enum AnEnum1
 {
     FirstThing,
     SecondThing = 2
 }
 
-public class Class2<T>
+internal class Class3<T> where T : class
 {
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
+    {
+        EnumProp = enumProp;
+        Klo = klo != 0 ? klo : throw new Exception();
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+
     public AnEnum1 EnumProp { get; }
 
     public T Prop1 { get; }
 
     public int Klo { get; }
 
-    
+    public Class3 WithEnumProp(AnEnum1 enumProp) => new Class3(enumProp, Klo, Prop1);
+
+    public Class3 WithProp1(T prop1) => new Class3(EnumProp, Klo, prop1);
+
+    public Class3 WithKlo(int klo) => new Class3(EnumProp, klo, Prop1);
 }
 ";
 
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(239, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(429, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act
@@ -362,7 +384,7 @@ public class Class2<T>
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_WithMethodForEachPropertyIsGenerated3()
+        public async Task Class_WithSomeProperties_ConstructorWithMoreParametersThanProperties_IsIgnored()
         {
             // Arrange
             var testString = @"
@@ -393,44 +415,16 @@ internal class Class3<T> where T : class
     public int Klo { get; }
 }
 ";
-            var expectedText = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-public enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-public class Class2<T>
-{
-    public AnEnum1 EnumProp { get; }
-
-    public T Prop1 { get; }
-
-    public int Klo { get; }
-
-    
-}
-";
-
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(239, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(418, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act
             await sut.ComputeRefactoringsAsync(context);
-            Assert.IsNotNull(registeredAction);
-
-            var changedDocument = await ApplyRefactoring(document, registeredAction);
-            var changedText = (await changedDocument.GetTextAsync()).ToString();
 
             // Assert
-            Assert.AreEqual(expectedText, changedText);
+            Assert.IsNull(registeredAction);
         }
 
         [TestMethod]
@@ -451,7 +445,7 @@ internal enum AnEnum1
 
 internal class Class3<T> where T : class
 {
-    public Class3(AnEnum1 enumProp, int klo, T aaa, int abc)
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
     {
         EnumProp = enumProp;
         Klo = klo != 0 ? throw new Exception() : klo;
@@ -471,27 +465,38 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-public enum AnEnum1
+internal enum AnEnum1
 {
     FirstThing,
     SecondThing = 2
 }
 
-public class Class2<T>
+internal class Class3<T> where T : class
 {
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
+    {
+        EnumProp = enumProp;
+        Klo = klo != 0 ? throw new Exception() : klo;
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+
     public AnEnum1 EnumProp { get; }
 
     public T Prop1 { get; }
 
     public int Klo { get; }
 
-    
+    public Class3 WithEnumProp(AnEnum1 enumProp) => new Class3(enumProp, Klo, Prop1);
+
+    public Class3 WithProp1(T prop1) => new Class3(EnumProp, Klo, prop1);
+
+    public Class3 WithKlo(int klo) => new Class3(EnumProp, klo, Prop1);
 }
 ";
 
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(239, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(425, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act
@@ -506,7 +511,7 @@ public class Class2<T>
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_ExistingWithMethods_AreReplaced_WithCompleteOne()
+        public async Task Class_WithSomeProperties_ExistingWithMethods_AreReplaced_WithNewOnes()
         {
             // Arrange
             var testString = @"
@@ -515,13 +520,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-public enum AnEnum1
+internal enum AnEnum1
 {
     FirstThing,
     SecondThing = 2
 }
 
-public class Class2<T>
+internal class Class3<T> where T : class
 {
     public AnEnum1 EnumProp { get; }
 
@@ -529,7 +534,18 @@ public class Class2<T>
 
     public int Klo { get; }
 
-    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp}"";
+    public Class3 WithEnumProp(AnEnum1 enumProp) => new Class3(enumProp, Klo, Prop1);
+
+    public Class3 WithProp1(T prop1) => new Class3(EnumProp, Klo, prop1);
+
+    public Class3 WithKlo(int klo) => new Class3(EnumProp, klo, Prop1);
+
+    public Class3(AnEnum1 enumProp, T aaa, int klo)
+    {
+        EnumProp = enumProp;
+        Klo = klo != 0 ? throw new Exception() : klo;
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
 }
 ";
             var expectedText = @"
@@ -538,13 +554,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-public enum AnEnum1
+internal enum AnEnum1
 {
     FirstThing,
     SecondThing = 2
 }
 
-public class Class2<T>
+internal class Class3<T> where T : class
 {
     public AnEnum1 EnumProp { get; }
 
@@ -552,7 +568,18 @@ public class Class2<T>
 
     public int Klo { get; }
 
-    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp} {nameof(Prop1)}={Prop1} {nameof(Klo)}={Klo}"";
+    public Class3 WithEnumProp(AnEnum1 enumProp) => new Class3(enumProp, Prop1, Klo);
+
+    public Class3 WithProp1(T prop1) => new Class3(EnumProp, prop1, Klo);
+
+    public Class3 WithKlo(int klo) => new Class3(EnumProp, Prop1, klo);
+
+    public Class3(AnEnum1 enumProp, T aaa, int klo)
+    {
+        EnumProp = enumProp;
+        Klo = klo != 0 ? throw new Exception() : klo;
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
 }
 ";
 

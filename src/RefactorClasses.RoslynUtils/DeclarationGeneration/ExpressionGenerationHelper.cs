@@ -40,7 +40,7 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
                 SyntaxFactory.InvocationExpression(
                     identifierName, ToArgList(arguments));
 
-        public static ObjectCreationExpressionSyntax Create(
+        public static ObjectCreationExpressionSyntax CreateObject(
             TypeSyntax type,
             params ArgumentSyntax[] arguments) =>
             SyntaxFactory.ObjectCreationExpression(type, ToArgList(arguments), null);

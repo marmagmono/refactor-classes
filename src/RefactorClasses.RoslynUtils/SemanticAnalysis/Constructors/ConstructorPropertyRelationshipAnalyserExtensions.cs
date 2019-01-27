@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using RefactorClasses.RoslynUtils.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -20,7 +21,7 @@ namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
                 return (Array.Empty<int>(), false);
 
             var parameters = constructorSymbol.Parameters;
-            var mappings = CreateArray<int>(properties.Length, NoMapping);
+            var mappings = ArrayUtils.CreateArray(properties.Length, NoMapping);
             bool allPropertiesMatchParameters = properties.Length == parameters.Length;
 
             for (int i = 0; i < properties.Length; ++i)
@@ -34,15 +35,6 @@ namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
             }
 
             return (mappings, allPropertiesMatchParameters);
-        }
-
-        private static T[] CreateArray<T>(int size, T value)
-        {
-            var res = new T[size];
-            for (int i = 0; i < res.Length; ++i)
-                res[i] = value;
-
-            return res;
         }
 
         private static int GetMatchingParameterIdx(

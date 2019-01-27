@@ -123,7 +123,7 @@ namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
                     case ConditionalExpressionSyntax exp
                         when exp.WhenTrue is ThrowExpressionSyntax: // aaa = fdfs ? throw : o2;
 
-                        return Analyse(exp.WhenTrue);
+                        return Analyse(exp.WhenFalse);
 
                     default:
                         return ParsingError;

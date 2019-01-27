@@ -24,7 +24,7 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
             private BlockSyntax blockBody;
             private ArrowExpressionClauseSyntax expressionBody;
             private TypeParameterListSyntax typeParameters = null;
-            //private List<TypeParameterConstraintClauseSyntax> typeConstraints;
+            private List<TypeParameterConstraintClauseSyntax> typeConstraints;
 
             public MethodGenerationBuilder(SyntaxToken identifier)
             {

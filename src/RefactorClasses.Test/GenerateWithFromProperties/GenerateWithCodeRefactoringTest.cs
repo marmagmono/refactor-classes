@@ -171,6 +171,53 @@ namespace RefactorClasses.Test.GenerateWithFromProperties
         }
 
         [TestMethod]
+        public async Task Class_WithConstructorThatDoesNotAssignAllProperties_IsIgnored()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+internal enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+internal class Class3<T> where T : class
+{
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
+    {
+        EnumProp = enumProp;
+        Klo = klo != 0 ? klo : throw new Exception();
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+
+    public AnEnum1 EnumProp { get; }
+
+    public T Prop1 { get; }
+
+    public int Klo { get; }
+
+    public int NotAssignedOne { get; }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            var context = CreateRefactoringContext(document, new TextSpan(429, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+
+            // Assert
+            Assert.IsNull(registeredAction);
+        }
+
+        [TestMethod]
         public async Task Class_WithSomeProperties_WithMethodForEachPropertyIsGenerated()
         {
             // Arrange

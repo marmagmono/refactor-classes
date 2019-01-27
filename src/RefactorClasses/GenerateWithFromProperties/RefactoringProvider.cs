@@ -33,7 +33,6 @@ namespace RefactorClasses.GenerateWithFromProperties
             var (atMostOneConstructor, nonTrivialConstructorCandidate) =
                 ClassDeclarationSyntaxAnalysis.HasAtMostOneNoneTrivialConstructor(classDeclarationSyntax);
 
-            // TODO: Unit test.
             if (!atMostOneConstructor || nonTrivialConstructorCandidate == null) return;
 
             var properties = ClassDeclarationSyntaxAnalysis.GetPropertyDeclarations(classDeclarationSyntax).ToList();
@@ -43,13 +42,20 @@ namespace RefactorClasses.GenerateWithFromProperties
 
             var cancellationToken = context.CancellationToken;
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
-            var propertySymbols = properties.Select(p => semanticModel.GetDeclaredSymbol(p, cancellationToken));
+
+            var constructorSymbol = semanticModel.GetDeclaredSymbol(nonTrivialConstructorCandidate);
+            var propertySymbols = properties.Select(p => semanticModel.GetDeclaredSymbol(p, cancellationToken)).ToArray();
 
             var analyser = new ConstructorPropertyRelationshipAnalyser(
                 Array.Empty<IFieldSymbol>(),
-                propertySymbols.ToArray());
+                propertySymbols);
 
             var result = analyser.Analyze(semanticModel, nonTrivialConstructorCandidate);
+            var (idxMappings, isExhaustive) = result.GetIndexMapping(propertySymbols, constructorSymbol);
+            if (!isExhaustive)
+            {
+                return;
+            }
 
             context.RegisterRefactoring(
                 new DelegateCodeAction(

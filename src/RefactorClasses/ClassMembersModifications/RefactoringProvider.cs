@@ -149,15 +149,44 @@ namespace RefactorClasses.ClassMembersModifications
             }
 
             // TODO: preserve constructor parameters indent ?
-            var parameterToInsert = SyntaxHelpers.Parameter(analysedDeclaration.Type, analysedDeclaration.Identifier);
             var parameterList = constructorDeclaration.ParameterList.Parameters.ToList();
-            if (insertPosition == AppendPosition)
-                parameterList.Add(parameterToInsert);
-            else
-                parameterList.Insert(insertPosition, parameterToInsert);
+            var firstParameter = parameterList.FirstOrDefault();
 
-            var newConstructorDeclaration = constructorDeclaration
-                .WithParameterList(SyntaxHelpers.ParameterList(parameterList));
+            // Indent like the first parameter
+            var declaredType = firstParameter != null ?
+                analysedDeclaration.Type.WithLeadingTrivia(firstParameter.GetLeadingTrivia())
+                : analysedDeclaration.Type;
+
+            var parameterToInsert = SyntaxHelpers.Parameter(declaredType, analysedDeclaration.Identifier);
+            var separators = constructorDeclaration
+                .ParameterList.Parameters.GetSeparators()
+                .ToList();
+
+            if (parameterList.Count == 1)
+            {
+                separators.Add(Tokens.Comma);
+            }
+            else
+            {
+                separators.Add(separators.First());
+            }
+
+            if (insertPosition == AppendPosition)
+            {
+                parameterList.Add(parameterToInsert);
+            }
+            else
+            {
+                parameterList.Insert(insertPosition, parameterToInsert);
+            }
+
+            //var parameterListSyntax = SyntaxHelpers.ParameterList(parameterList, separators);
+            var parameterListSyntax =  SyntaxFactory.ParameterList(
+                constructorDeclaration.ParameterList.OpenParenToken, // this should preserve original trivia and EOF of there is any
+                SyntaxFactory.SeparatedList(parameterList, separators),
+                SyntaxFactory.Token(SyntaxKind.CloseParenToken));
+
+            var newConstructorDeclaration = constructorDeclaration.WithParameterList(parameterListSyntax);
 
             // TODO: how to determine where to insert assignment ?
             // TODO: use this in assignment ?

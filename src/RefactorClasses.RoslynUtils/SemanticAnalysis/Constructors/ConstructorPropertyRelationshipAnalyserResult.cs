@@ -37,5 +37,15 @@ namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
 
             return EmptyResult;
         }
+
+        public AssignmentAnalyserResult GetResult(ISymbol symbol)
+        {
+            switch (symbol)
+            {
+                case IPropertySymbol property: return GetResult(property);
+                case IFieldSymbol field: return GetResult(field);
+                default: return EmptyResult;
+            }
+        }
     }
 }

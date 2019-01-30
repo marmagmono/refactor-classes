@@ -27,8 +27,6 @@ namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
             // TODO: exclude constant fields ?
             // TODO: test with arrow expression constructors ?
             // TODO: test with assignment inside if(....) {  } else { } / switch() ... etc.
-            // TODO: Ensure it works assignments like A = a ?? throw or A = a == null ? xxx : yyy or ???
-            // TODO: What to do in case of 
             // TODO: handle things like (a, b, c) = (10, 20, 30);
             // Exclude constructors with : this() ???
             // Constructors that call base ?

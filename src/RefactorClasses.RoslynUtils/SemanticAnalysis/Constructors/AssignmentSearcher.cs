@@ -13,15 +13,15 @@ namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
         private static readonly AssignmentAnalyserResult ParsingError = new ParsingError();
 
         private readonly SemanticModel semanticModel;
-        private readonly IFieldSymbol[] fields;
-        private readonly IPropertySymbol[] properties;
+        private readonly IReadOnlyCollection<IFieldSymbol> fields;
+        private readonly IReadOnlyCollection<IPropertySymbol> properties;
 
         private readonly Dictionary<ISymbol, AssignmentAnalyserResult> foundAssignments = new Dictionary<ISymbol, AssignmentAnalyserResult>();
 
         public AssignmentSearcher(
             SemanticModel semanticModel,
-            IFieldSymbol[] fields,
-            IPropertySymbol[] properties)
+            IReadOnlyCollection<IFieldSymbol> fields,
+            IReadOnlyCollection<IPropertySymbol> properties)
         {
             this.semanticModel = semanticModel ?? throw new ArgumentNullException(nameof(semanticModel));
             this.fields = fields ?? throw new ArgumentNullException(nameof(fields));
@@ -54,7 +54,7 @@ namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
 
         public override void VisitAssignmentExpression(AssignmentExpressionSyntax node)
         {
-            if ((fields.Length == 0 && properties.Length == 0)
+            if ((fields.Count == 0 && properties.Count == 0)
                 || !node.IsKind(SyntaxKind.SimpleAssignmentExpression))
                 return;
 

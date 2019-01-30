@@ -37,6 +37,12 @@ namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
         public static IEnumerable<PropertyDeclarationSyntax> GetPropertyDeclarations(ClassDeclarationSyntax classDeclarationSyntax) =>
             GetMembers<PropertyDeclarationSyntax>(classDeclarationSyntax);
 
+        public static IEnumerable<FieldDeclarationSyntax> GetFieldDeclarations(ClassDeclarationSyntax classDeclarationSyntax) =>
+            GetMembers<FieldDeclarationSyntax>(classDeclarationSyntax);
+
+        public static IEnumerable<VariableDeclaratorSyntax> GetFieldVariableDeclarations(ClassDeclarationSyntax classDeclarationSyntax) =>
+            GetMembers<FieldDeclarationSyntax>(classDeclarationSyntax).SelectMany(f => f.Declaration.Variables);
+
         public static (bool conditionTrue, ConstructorDeclarationSyntax nonTrivialConstructor)
             HasAtMostOneNoneTrivialConstructor(ClassDeclarationSyntax classDeclarationSyntax)
         {

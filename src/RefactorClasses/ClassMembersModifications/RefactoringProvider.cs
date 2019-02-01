@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Formatting;
 using RefactorClasses.CodeActions;
 using RefactorClasses.CodeRefactoringUtils;
 using RefactorClasses.RoslynUtils.DeclarationAnalysis;
@@ -176,22 +177,24 @@ namespace RefactorClasses.ClassMembersModifications
             var statementToAdd = SyntaxFactory.ExpressionStatement(assignment);
             var body = constructorDeclaration.Body;
 
-            var closestStatement = closestSymbolAssignment.Parent as ExpressionStatementSyntax;
+            var closestStatement = closestSymbolAssignment?.Parent as ExpressionStatementSyntax;
             if (closestStatement == null)
             {
-                newConstructorDeclaration = newConstructorDeclaration.AddBodyStatements(statementToAdd);
+                newConstructorDeclaration = newConstructorDeclaration
+                    .AddBodyStatements(statementToAdd)
+                    .WithAdditionalAnnotations(Formatter.Annotation);
             }
             else if (isBeforeFoundSymbol)
             {
                 var newBody = body.InsertBefore(closestStatement, statementToAdd);
                 newConstructorDeclaration = newConstructorDeclaration.WithBody(
-                    newBody);
+                    newBody).WithAdditionalAnnotations(Formatter.Annotation);
             }
             else
             {
                 var newBody = body.InsertAfter(closestStatement,statementToAdd);
                 newConstructorDeclaration = newConstructorDeclaration.WithBody(
-                    newBody);
+                    newBody).WithAdditionalAnnotations(Formatter.Annotation);
             }
 
             var root = await tree.GetRootAsync(cancellationToken).ConfigureAwait(false);

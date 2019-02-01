@@ -517,6 +517,7 @@ public class Test
             Assert.AreEqual(expectedText, changedText);
         }
 
+        [TestMethod]
         public async Task ClassWithProperty_PropertyAddedToConstructor1()
         {
             // Arrange
@@ -553,7 +554,7 @@ public class Test
 
     public int Ooo { get; set; }
 
-    public Test(string klo, int ooo)
+    public Test(int ooo, string klo)
     {
         Klo = klo;
     }
@@ -577,6 +578,7 @@ public class Test
             Assert.AreEqual(expectedText, changedText);
         }
 
+        [TestMethod]
         public async Task ClassWithProperty_PropertyAddedToConstructor2()
         {
             // Arrange
@@ -628,6 +630,67 @@ public class Test
             var document = CreateDocument(testString);
             // Should point to Klo
             var context = CreateRefactoringContext(document, new TextSpan(219, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task ClassWithProperty_PropertyAddedToConstructor3()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test()
+    {
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo)
+    {
+        Klo = klo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to Klo
+            var context = CreateRefactoringContext(document, new TextSpan(185, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act

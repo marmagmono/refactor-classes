@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -41,6 +40,7 @@ namespace RefactorClasses.ClassMembersModifications
             var (_, fieldDeclaration) = await context.FindSyntaxForCurrentSpan<FieldDeclarationSyntax>();
             var (_, fieldVariableDeclaration) = await context.FindSyntaxForCurrentSpan<VariableDeclaratorSyntax>();
 
+            // TODO: Skip properties like string Prop => "something";
             if ((fieldDeclaration == null && propertyDeclaration == null)
                 || (fieldDeclaration != null && fieldDeclaration.IsStatic())
                 || (propertyDeclaration != null && propertyDeclaration.IsStatic()))
@@ -129,8 +129,8 @@ namespace RefactorClasses.ClassMembersModifications
 
             var classMemberAnalysis = new ClassMembersAnalysis(classDeclaration, semanticModel);
             var analyser = new ConstructorPropertyRelationshipAnalyser(
-                classMemberAnalysis.Fields.Select(f => f.Symbol).ToArray(), // TODO: not super efficient on structs ?
-                classMemberAnalysis.Properties.Select(f => f.Symbol).ToArray()); // TODO: not super efficient on structs ?
+                classMemberAnalysis.Fields.Select(f => f.Symbol).ToArray(),
+                classMemberAnalysis.Properties.Select(f => f.Symbol).ToArray());
             var result = analyser.Analyze(semanticModel, constructorDeclaration);
 
             // Filter to consider only fields and properties that are assigned in constructor.
@@ -140,57 +140,59 @@ namespace RefactorClasses.ClassMembersModifications
 
             // Find closest declaration among the ones that are assigned in the constructor
             var (closestSymbol, isBeforeFoundSymbol) = filteredClassMembers.GetClosestFieldOrProperty(analysedDeclaration.Symbol);
-            int insertPosition = AppendPosition;
+            int constructorInsertPosition = AppendPosition;
+            
             if (closestSymbol != null)
             {
                 // There is another member that is assigned in constructor
-                insertPosition = result.GetMatchingParameterIdx(constructorSymbol, closestSymbol);
-                if (!isBeforeFoundSymbol) ++insertPosition;
+                constructorInsertPosition = result.GetMatchingParameterIdx(constructorSymbol, closestSymbol);
+                if (!isBeforeFoundSymbol) ++constructorInsertPosition;
             }
 
-            // TODO: preserve constructor parameters indent ?
-            var parameterList = constructorDeclaration.ParameterList.Parameters.ToList();
-            var firstParameter = parameterList.FirstOrDefault();
-
-            // Indent like the first parameter
-            var declaredType = firstParameter != null ?
-                analysedDeclaration.Type.WithLeadingTrivia(firstParameter.GetLeadingTrivia())
-                : analysedDeclaration.Type;
-
-            var parameterToInsert = SyntaxHelpers.Parameter(declaredType, analysedDeclaration.Identifier);
-            var separators = constructorDeclaration
-                .ParameterList.Parameters.GetSeparators()
-                .ToList();
-
-            if (parameterList.Count == 1)
-            {
-                separators.Add(Tokens.Comma);
-            }
-            else
-            {
-                separators.Add(separators.First());
-            }
-
-            if (insertPosition == AppendPosition)
-            {
-                parameterList.Add(parameterToInsert);
-            }
-            else
-            {
-                parameterList.Insert(insertPosition, parameterToInsert);
-            }
-
-            //var parameterListSyntax = SyntaxHelpers.ParameterList(parameterList, separators);
-            var parameterListSyntax =  SyntaxFactory.ParameterList(
-                constructorDeclaration.ParameterList.OpenParenToken, // this should preserve original trivia and EOF of there is any
-                SyntaxFactory.SeparatedList(parameterList, separators),
-                SyntaxFactory.Token(SyntaxKind.CloseParenToken));
-
-            var newConstructorDeclaration = constructorDeclaration.WithParameterList(parameterListSyntax);
+            // TODO: resolve name clashes if parameter with a given name already exists?
+            var addedParameter = SyntaxHelpers.LowercaseIdentifierFirstLetter(analysedDeclaration.Identifier);
+            var newConstructorDeclaration = constructorDeclaration.InsertParameter(
+                SyntaxHelpers.Parameter(
+                    analysedDeclaration.Type,
+                    addedParameter),
+                constructorInsertPosition);
 
             // TODO: how to determine where to insert assignment ?
             // TODO: use this in assignment ?
-            //constructorDeclaration..Wit
+
+            AssignmentExpressionSyntax closestSymbolAssignment = null;
+            if (closestSymbol != null && result.GetResult(closestSymbol) is AssignmentExpressionAnalyserResult res)
+            {
+                closestSymbolAssignment = res.Assignment;
+            }
+
+            var fieldIdentifier = SyntaxFactory.IdentifierName(analysedDeclaration.Identifier);
+            var parameterIdentifier = SyntaxFactory.IdentifierName(addedParameter);
+            var leftSide = addedParameter.ValueText.Equals(analysedDeclaration.Identifier.ValueText, StringComparison.Ordinal) ?
+                (ExpressionSyntax)ExpressionGenerationHelper.ThisMemberAccess(fieldIdentifier)
+                : fieldIdentifier;
+            var assignment = ExpressionGenerationHelper.SimpleAssignment(leftSide, parameterIdentifier);
+
+            var statementToAdd = SyntaxFactory.ExpressionStatement(assignment);
+            var body = constructorDeclaration.Body;
+
+            var closestStatement = closestSymbolAssignment.Parent as ExpressionStatementSyntax;
+            if (closestStatement == null)
+            {
+                newConstructorDeclaration = newConstructorDeclaration.AddBodyStatements(statementToAdd);
+            }
+            else if (isBeforeFoundSymbol)
+            {
+                var newBody = body.InsertBefore(closestStatement, statementToAdd);
+                newConstructorDeclaration = newConstructorDeclaration.WithBody(
+                    newBody);
+            }
+            else
+            {
+                var newBody = body.InsertAfter(closestStatement,statementToAdd);
+                newConstructorDeclaration = newConstructorDeclaration.WithBody(
+                    newBody);
+            }
 
             var root = await tree.GetRootAsync(cancellationToken).ConfigureAwait(false);
             var newRoot = root.ReplaceNode(constructorDeclaration, newConstructorDeclaration);

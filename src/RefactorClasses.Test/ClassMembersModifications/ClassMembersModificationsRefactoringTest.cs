@@ -280,6 +280,7 @@ public static class Test
         }
 
         [TestMethod]
+        [Ignore("TODO: Not implemented yet")]
         public async Task ClassWithNonTrivialArrowConstructor_IsIgnored()
         {
             // Arrange
@@ -355,6 +356,7 @@ public class Test
     public Test(int eee, int uuu, int klo, int ooo)
     {
         this.eee = eee;
+        this.uuu = uuu;
         this.klo = klo;
         Ooo = ooo;
     }
@@ -428,6 +430,7 @@ public class Test
         int ooo)
     {
         this.eee = eee;
+        this.uuu = uuu;
         this.klo = klo;
         Ooo = ooo;
     }
@@ -438,6 +441,193 @@ public class Test
             var document = CreateDocument(testString);
             // Should point to uuu
             var context = CreateRefactoringContext(document, new TextSpan(148, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task ClassWithProperty_PropertyAddedToConstructor()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(int ooo)
+    {
+        Ooo = ooo;
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to Klo
+            var context = CreateRefactoringContext(document, new TextSpan(185, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        public async Task ClassWithProperty_PropertyAddedToConstructor1()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(int ooo)
+    {
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo)
+    {
+        Klo = klo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to Klo
+            var context = CreateRefactoringContext(document, new TextSpan(173, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        public async Task ClassWithProperty_PropertyAddedToConstructor2()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public float AnotherThing { get; set; }
+    public string Klo { get; set; }
+    public int Ooo { get; set; }
+
+    public Test(float ttyyy, int ooo)
+    {
+        AnotherThing = ttyyy;
+        Ooo = ooo;
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public float AnotherThing { get; set; }
+    public string Klo { get; set; }
+    public int Ooo { get; set; }
+
+    public Test(float ttyyy, string klo, int ooo)
+    {
+        AnotherThing = ttyyy;
+        Klo = klo;
+        Ooo = ooo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to Klo
+            var context = CreateRefactoringContext(document, new TextSpan(219, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act

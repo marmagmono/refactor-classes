@@ -29,6 +29,14 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
                 left,
                 right);
 
+        public static AssignmentExpressionSyntax SimpleAssignment(
+            ExpressionSyntax left,
+            ExpressionSyntax right) =>
+            SyntaxFactory.AssignmentExpression(
+                SyntaxKind.SimpleAssignmentExpression,
+                left,
+                right);
+
         public static InvocationExpressionSyntax Invocation(
             string identifierName,
             params ArgumentSyntax[] arguments) =>
@@ -47,6 +55,13 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
 
         public static ArrowExpressionClauseSyntax Arrow(ExpressionSyntax expression) =>
             SyntaxFactory.ArrowExpressionClause(expression);
+
+        public static MemberAccessExpressionSyntax ThisMemberAccess(IdentifierNameSyntax identifierName) =>
+            SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.ThisExpression(),
+                identifierName);
+
 
         private static ArgumentListSyntax ToArgList(params ArgumentSyntax[] arguments) =>
             SyntaxFactory.ArgumentList(SyntaxHelpers.SeparatedSyntaxList(arguments));

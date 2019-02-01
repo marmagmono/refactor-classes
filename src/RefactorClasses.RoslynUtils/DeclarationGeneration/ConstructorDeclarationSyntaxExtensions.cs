@@ -36,7 +36,11 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
                     : parameter.Type);
 
             // using separators.First() rather than comma, should preserve EOL if there is any after parameter.
-            separators.Add(parameterList.Count == 1 ? Tokens.Comma : separators.First());
+            if (parameterList.Count > 0)
+            {
+                separators.Add(parameterList.Count == 1 ? Tokens.Comma : separators.First());
+            }
+            
 
             if (position == AppendPosition)
             {

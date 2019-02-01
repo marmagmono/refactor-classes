@@ -50,15 +50,34 @@ namespace RefactorClasses.ClassMembersModifications
             switch (nonTrivialConstructorCandidate)
             {
                 case ConstructorDeclarationSyntax candidate:
-                    var cancellationToken = context.CancellationToken;
-                    var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+                    {
+                        var cancellationToken = context.CancellationToken;
+                        var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
 
-                    HandleCandidate(semanticModel, candidate, propertyDeclaration, fieldDeclaration, fieldVariableDeclaration);
+                        HandleCandidate(semanticModel, candidate, propertyDeclaration, fieldDeclaration, fieldVariableDeclaration);
+
+                    }
                     break;
 
                 case null:
+                    {
+                        var trivialConstructor = ClassDeclarationSyntaxAnalysis.GetConstructors(classDeclarationSyntax)?.FirstOrDefault();
+                        if (trivialConstructor != null)
+                        {
+                            var cancellationToken = context.CancellationToken;
+                            var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+
+                            HandleCandidate(semanticModel, trivialConstructor, propertyDeclaration, fieldDeclaration, fieldVariableDeclaration);
+                        }
+                        else
+                        {
+                            // register add constructor refactoring
+                        }
+                    }
+
+                    break;
+
                 default:
-                    // register add constructor refactoring
                     break;
             }
 

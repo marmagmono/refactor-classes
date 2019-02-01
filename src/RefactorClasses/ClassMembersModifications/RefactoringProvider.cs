@@ -39,13 +39,28 @@ namespace RefactorClasses.ClassMembersModifications
 
             var (_, propertyDeclaration) = await context.FindSyntaxForCurrentSpan<PropertyDeclarationSyntax>();
             var (_, fieldDeclaration) = await context.FindSyntaxForCurrentSpan<FieldDeclarationSyntax>();
-            var (_, fieldVariableDeclaration) = await context.FindSyntaxForCurrentSpan<VariableDeclaratorSyntax>();
 
             // TODO: Skip properties like string Prop => "something";
             if ((fieldDeclaration == null && propertyDeclaration == null)
                 || (fieldDeclaration != null && fieldDeclaration.IsStatic())
                 || (propertyDeclaration != null && propertyDeclaration.IsStatic()))
                 return;
+
+            var (_, fieldVariableDeclaration) = await context.FindSyntaxForCurrentSpan<VariableDeclaratorSyntax>();
+            if (fieldDeclaration != null && fieldVariableDeclaration == null)
+            {
+                // Verify if it is not a comma token.
+                var span = context.Span;
+                if (span.Start == 0) return;
+
+                var root = await document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+                var token = root.FindToken(span.Start);
+                if (!token.IsKind(SyntaxKind.CommaToken)) return;
+
+                var movedToken = root.FindToken(span.Start - 1);
+                fieldVariableDeclaration = movedToken.Parent.FirstAncestorOrSelf<VariableDeclaratorSyntax>();
+                if (fieldVariableDeclaration == null) return;
+            }
 
             switch (nonTrivialConstructorCandidate)
             {

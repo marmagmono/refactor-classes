@@ -705,6 +705,91 @@ public class Test
         }
 
         [TestMethod]
+        public async Task ClassWithProperty_MultipleFields_CursorAfterComma_Works()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace testanalyzer
+{
+    class Class1
+    {
+        private string a, b, v;
+
+        private string ottt;
+
+        private string otta;
+
+        public string Something { get; set; }
+
+        public string OtherThing { get; set; }
+
+        public Class1 WithSomething(string something) => new Class1(something);
+
+        public Class1(string something)
+        {
+            Something = something;
+            this.otta = something;
+        }
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace testanalyzer
+{
+    class Class1
+    {
+        private string a, b, v;
+
+        private string ottt;
+
+        private string otta;
+
+        public string Something { get; set; }
+
+        public string OtherThing { get; set; }
+
+        public Class1 WithSomething(string something) => new Class1(something);
+
+        public Class1(string b, string something)
+        {
+            Something = something;
+            this.b = b;
+            this.otta = something;
+        }
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Cursor after 'b,'
+            var context = CreateRefactoringContext(document, new TextSpan(204, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
         public async Task Class_WithSomeProperties_ConstructorMatchingPropertiesIsGenerated()
         {
             // Arrange

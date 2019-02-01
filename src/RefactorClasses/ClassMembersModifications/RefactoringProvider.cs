@@ -49,7 +49,7 @@ namespace RefactorClasses.ClassMembersModifications
             var (_, fieldVariableDeclaration) = await context.FindSyntaxForCurrentSpan<VariableDeclaratorSyntax>();
             if (fieldDeclaration != null && fieldVariableDeclaration == null)
             {
-                // Verify if it is not a comma token.
+                // Verify if it is not a comma or semicolon token.
                 var span = context.Span;
                 if (span.Start == 0) return;
 
@@ -58,7 +58,9 @@ namespace RefactorClasses.ClassMembersModifications
                 if (!(token.IsKind(SyntaxKind.CommaToken)
                     || token.IsKind(SyntaxKind.SemicolonToken))) return;
 
-                var movedToken = root.FindToken(span.Start - 1);
+                var movedToken = token.GetPreviousToken();
+                if (movedToken == default) return;
+
                 fieldVariableDeclaration = movedToken.Parent.FirstAncestorOrSelf<VariableDeclaratorSyntax>();
                 if (fieldVariableDeclaration == null) return;
             }
@@ -87,7 +89,7 @@ namespace RefactorClasses.ClassMembersModifications
                         }
                         else
                         {
-                            // register add constructor refactoring
+                            // TODO: register add constructor refactoring
                         }
                     }
 

@@ -55,7 +55,8 @@ namespace RefactorClasses.ClassMembersModifications
 
                 var root = await document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
                 var token = root.FindToken(span.Start);
-                if (!token.IsKind(SyntaxKind.CommaToken)) return;
+                if (!(token.IsKind(SyntaxKind.CommaToken)
+                    || token.IsKind(SyntaxKind.SemicolonToken))) return;
 
                 var movedToken = root.FindToken(span.Start - 1);
                 fieldVariableDeclaration = movedToken.Parent.FirstAncestorOrSelf<VariableDeclaratorSyntax>();

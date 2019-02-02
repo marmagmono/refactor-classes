@@ -237,6 +237,11 @@ namespace RefactorClasses.ClassMembersModifications
                 return base.VisitPropertyDeclaration(node);
             }
 
+            public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+            {
+                return base.VisitClassDeclaration(node);
+            }
+
             public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
             {
                 if (analysedDeclaration is FieldDeclaration fd && node.Equals(fd.FullField))

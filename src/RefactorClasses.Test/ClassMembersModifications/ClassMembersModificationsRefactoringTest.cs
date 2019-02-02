@@ -1012,8 +1012,70 @@ public class Test
         }
 
         [TestMethod]
+        public async Task ClassWithProperty_PropertyRemoved2()
+        {
+            // TODO: Cleanup space if removing first property.
+
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+
+    public int Ooo { get; set; }
+
+    public Test(int ooo)
+    {
+        Ooo = ooo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to Klo
+            var context = CreateRefactoringContext(document, new TextSpan(146, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
         public async Task ClassWithSingleField_FieldRemovedFromConstructor()
         {
+            // TODO: Cleanup space if removing first field.
+
             // Arrange
             var testString = @"
 using System;
@@ -1026,6 +1088,74 @@ public class Test
     private int simpleField;
 
     private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo, int simpleField)
+    {
+        Klo = klo;
+        this.simpleField = simpleField;
+        Ooo = ooo;
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to simpleField
+            var context = CreateRefactoringContext(document, new TextSpan(147, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task ClassWithSingleField_FieldRemovedFromConstructor2()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    private int simpleField;
 
     public string Klo { get; set; }
 
@@ -1064,7 +1194,7 @@ public class Test
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
             // Should point to simpleField
-            var context = CreateRefactoringContext(document, new TextSpan(147, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(177, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act

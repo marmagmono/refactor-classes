@@ -37,6 +37,16 @@ namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
             return (mappings, allPropertiesMatchParameters);
         }
 
+        public static int GetMatchingParameterIdx(
+            this ConstructorPropertyRelationshipAnalyserResult relationships,
+            IMethodSymbol constructorSymbol,
+            ISymbol symbol)
+        {
+            if (symbol == null) return -1;
+
+            return GetMatchingParameterIdx(relationships.GetResult(symbol), constructorSymbol.Parameters);
+        }
+
         private static int GetMatchingParameterIdx(
             AssignmentAnalyserResult analyserResult,
             ImmutableArray<IParameterSymbol> parameters)

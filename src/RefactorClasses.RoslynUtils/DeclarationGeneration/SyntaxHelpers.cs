@@ -21,6 +21,14 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
                 SyntaxFactory.SeparatedList(parameters),
                 SyntaxFactory.Token(SyntaxKind.CloseParenToken));
 
+        public static ParameterListSyntax ParameterList(
+            IEnumerable<ParameterSyntax> parameters,
+            IEnumerable<SyntaxToken> separators) =>
+            SyntaxFactory.ParameterList(
+                SyntaxFactory.Token(SyntaxKind.OpenParenToken),
+                SyntaxFactory.SeparatedList(parameters, separators),
+                SyntaxFactory.Token(SyntaxKind.CloseParenToken));
+
         public static SeparatedSyntaxList<TNode> SeparatedSyntaxList<TNode>(params TNode[] nodes) where TNode : SyntaxNode =>
             SyntaxFactory.SeparatedList(nodes);
 

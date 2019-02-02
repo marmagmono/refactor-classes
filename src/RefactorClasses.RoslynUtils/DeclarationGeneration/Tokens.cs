@@ -11,5 +11,9 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
         public static SyntaxToken Return => SyntaxFactory.Token(SyntaxKind.ReturnKeyword);
 
         public static SyntaxToken Semicolon => SyntaxFactory.Token(SyntaxKind.SemicolonToken);
+
+        public static SyntaxToken Comma => SyntaxFactory.Token(SyntaxKind.CommaToken);
+
+        public static SyntaxToken OpenParen => SyntaxFactory.Token(SyntaxKind.OpenParenToken);
     }
 }

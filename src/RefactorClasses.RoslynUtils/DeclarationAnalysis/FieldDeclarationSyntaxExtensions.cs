@@ -6,8 +6,8 @@ namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
 {
     public static class FieldDeclarationSyntaxExtensions
     {
-        public static bool IsStatic(this FieldDeclarationSyntax propertyDeclaration) =>
-            propertyDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword);
+        public static bool IsStatic(this FieldDeclarationSyntax fieldDeclaration) =>
+            fieldDeclaration.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword);
 
         public static bool HasMultipleVariables(this FieldDeclarationSyntax fieldDeclaration) =>
             fieldDeclaration.Declaration.Variables.Count > 1;

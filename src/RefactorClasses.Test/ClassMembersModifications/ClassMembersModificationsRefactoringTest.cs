@@ -950,6 +950,264 @@ public class Class2<T>
             Assert.AreEqual(expectedText, changedText);
         }
 
+        [TestMethod]
+        public async Task ClassWithProperty_PropertyRemoved()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public int Ooo { get; set; }
+
+    public Test(int ooo)
+    {
+        Ooo = ooo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to Klo
+            var context = CreateRefactoringContext(document, new TextSpan(173, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task ClassWithSingleField_FieldRemovedFromConstructor()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int simpleField;
+
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo, int simpleField)
+    {
+        Klo = klo;
+        this.simpleField = simpleField;
+        Ooo = ooo;
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to simpleField
+            var context = CreateRefactoringContext(document, new TextSpan(147, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task ClassWithComplexField_FieldRemoved()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int eee, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+        this.eee = eee;
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to eee
+            var context = CreateRefactoringContext(document, new TextSpan(145, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task ClassWithComplexField_FieldRemoved2()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee, uuu;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int eee, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+        this.uuu = eee;
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public class Test
+{
+    private int eee;
+
+    public string Klo { get; set; }
+
+    public int Ooo { get; set; }
+
+    public Test(string klo, int ooo)
+    {
+        Klo = klo;
+        Ooo = ooo;
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            // Should point to uuu
+            var context = CreateRefactoringContext(document, new TextSpan(148, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
         public async Task<Document> ApplyRefactoring(Document originalDocument, CodeAction codeAction)
         {
             var operations = await codeAction.GetOperationsAsync(default(CancellationToken));

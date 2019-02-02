@@ -25,7 +25,6 @@ namespace RefactorClasses.ClassMembersModifications
         {
             const int AppendPosition = int.MaxValue;
 
-            var tree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
 
             var classMemberAnalysis = new ClassMembersAnalysis(classDeclaration, semanticModel);
@@ -94,8 +93,52 @@ namespace RefactorClasses.ClassMembersModifications
                     newBody).WithAdditionalAnnotations(Formatter.Annotation);
             }
 
+            var tree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
             var root = await tree.GetRootAsync(cancellationToken).ConfigureAwait(false);
             var newRoot = root.ReplaceNode(constructorDeclaration, newConstructorDeclaration);
+            var newDocument = document.WithSyntaxRoot(newRoot);
+            return newDocument;
+        }
+
+        public static async Task<Document> RemoveParameter(
+            Document document,
+            ClassDeclarationSyntax classDeclaration,
+            AnalysedDeclaration analysedDeclaration,
+            ConstructorDeclarationSyntax constructorDeclaration,
+            CancellationToken cancellationToken)
+        {
+            var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
+            var analyser = new ConstructorPropertyRelationshipAnalyser(
+                analysedDeclaration.AsFieldArray(),
+                analysedDeclaration.AsPropertyArray());
+            var result = analyser.Analyze(semanticModel, constructorDeclaration);
+
+            var updatedConstructorDeclaration = constructorDeclaration;
+
+            var analysisResult = result.GetResult(analysedDeclaration.Symbol);
+            ParameterSyntax parameterToRemove = null;
+            ExpressionStatementSyntax assignmentToRemove = null;
+            if (analysisResult is AssignmentExpressionAnalyserResult assignment)
+            {
+                // Remove constructor parameter
+                var parameterSyntaxReference = assignment.AssignedParameter.DeclaringSyntaxReferences.FirstOrDefault();
+                if (parameterSyntaxReference != null)
+                {
+                    parameterToRemove = await parameterSyntaxReference.GetSyntaxAsync() as ParameterSyntax;
+                }
+
+                // Remove assignment in constructor
+                assignmentToRemove = assignment.Assignment.Parent as ExpressionStatementSyntax;
+            }
+
+            // Remove field / property from class.
+            var rewriter = new RemoveDeclarationClassRewriter(constructorDeclaration, parameterToRemove, assignmentToRemove, analysedDeclaration);
+            var updatedClassDeclaration = rewriter.Visit(classDeclaration);
+
+            // Apply changes
+            var tree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
+            var root = await tree.GetRootAsync(cancellationToken).ConfigureAwait(false);
+            var newRoot = root.ReplaceNode(classDeclaration, updatedClassDeclaration);
             var newDocument = document.WithSyntaxRoot(newRoot);
             return newDocument;
         }
@@ -142,6 +185,71 @@ namespace RefactorClasses.ClassMembersModifications
             }
 
             return (selected, minDistance);
+        }
+
+        private class RemoveDeclarationClassRewriter : CSharpSyntaxRewriter
+        {
+            private readonly ConstructorDeclarationSyntax constructorDeclaration;
+            private readonly ParameterSyntax parameterToRemove;
+            private readonly ExpressionStatementSyntax assignmentToRemove;
+            private readonly AnalysedDeclaration analysedDeclaration;
+
+            public RemoveDeclarationClassRewriter(
+                ConstructorDeclarationSyntax constructorDeclaration,
+                ParameterSyntax parameterToRemove,
+                ExpressionStatementSyntax assignmentToRemove,
+                AnalysedDeclaration analysedDeclaration)
+            {
+                this.constructorDeclaration = constructorDeclaration;
+                this.parameterToRemove = parameterToRemove;
+                this.assignmentToRemove = assignmentToRemove;
+                this.analysedDeclaration = analysedDeclaration;
+            }
+
+            public override SyntaxNode VisitParameterList(ParameterListSyntax node)
+            {
+                if (node.Parent?.Equals(constructorDeclaration) == true && parameterToRemove != null)
+                {
+                    var pl = constructorDeclaration.ParameterList;
+                    return node.WithParameters(pl.Parameters.Remove(parameterToRemove));
+                }
+
+                return base.VisitParameterList(node);
+            }
+
+            public override SyntaxNode VisitBlock(BlockSyntax node)
+            {
+                if (node.Equals(constructorDeclaration.Body) && assignmentToRemove != null)
+                {
+                    return node.RemoveNode(assignmentToRemove, SyntaxRemoveOptions.KeepNoTrivia);
+                }
+
+                return base.VisitBlock(node);
+            }
+
+            public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+            {
+                if (analysedDeclaration is PropertyDeclaration pd && node.Equals(pd.Declaration))
+                {
+                    return null;
+                }
+
+                return base.VisitPropertyDeclaration(node);
+            }
+
+            public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
+            {
+                if (analysedDeclaration is FieldDeclaration fd && node.Equals(fd.FullField))
+                {
+                    var variables = node.Declaration.Variables;
+                    if (variables.Count == 1)
+                        return null;
+
+                    return node.WithDeclaration(node.Declaration.WithVariables(variables.Remove(fd.Variable)));
+                }
+
+                return base.VisitFieldDeclaration(node);
+            }
         }
     }
 }

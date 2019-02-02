@@ -12,8 +12,8 @@ namespace RefactorClasses.ClassMembersModifications
 
     public sealed class PropertyDeclaration : AnalysedDeclaration
     {
-        IPropertySymbol Property { get; }
-        PropertyDeclarationSyntax Declaration { get; }
+        public IPropertySymbol Property { get; }
+        public PropertyDeclarationSyntax Declaration { get; }
 
         public override ISymbol Symbol => Property;
         public override TypeSyntax Type => Declaration.Type;
@@ -28,9 +28,9 @@ namespace RefactorClasses.ClassMembersModifications
 
     public sealed class FieldDeclaration : AnalysedDeclaration
     {
-        IFieldSymbol Field { get; }
-        FieldDeclarationSyntax FullField { get; }
-        VariableDeclaratorSyntax Variable { get; }
+        public IFieldSymbol Field { get; }
+        public FieldDeclarationSyntax FullField { get; }
+        public VariableDeclaratorSyntax Variable { get; }
 
         public override ISymbol Symbol => Field;
         public override TypeSyntax Type => FullField.Declaration.Type;

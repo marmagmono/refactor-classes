@@ -98,17 +98,27 @@ namespace RefactorClasses.ClassMembersModifications
 
                 var result = analyser.Analyze(model, candidate);
                 var assignmentResult = result.GetResult(memberSymbol);
+                AnalysedDeclaration ad = isProp ?
+                    (AnalysedDeclaration)new PropertyDeclaration(memberSymbol as IPropertySymbol, pDeclaration)
+                    : new FieldDeclaration(memberSymbol as IFieldSymbol, fDeclaration, variableDeclarator);
+
                 switch (assignmentResult)
                 {
                     case AssignmentExpressionAnalyserResult r:
                         // register remove as assignment exists
+                        context.RegisterRefactoring(
+                            new DelegateCodeAction(
+                                $"Remove {ad.Identifier.ValueText}",
+                                (c) => RefactoringActions.RemoveParameter(
+                                    document,
+                                    classDeclarationSyntax,
+                                    ad,
+                                    candidate,
+                                    c)));
                         break;
 
                     case EmptyAssignmentAnalyserResult _:
                         // register add to constructor
-                        AnalysedDeclaration ad = isProp ?
-                            (AnalysedDeclaration)new PropertyDeclaration(memberSymbol as IPropertySymbol, pDeclaration)
-                            : new FieldDeclaration(memberSymbol as IFieldSymbol, fDeclaration, variableDeclarator);
                         context.RegisterRefactoring(
                             new DelegateCodeAction(
                                 $"Add {ad.Identifier.ValueText} to constructor",

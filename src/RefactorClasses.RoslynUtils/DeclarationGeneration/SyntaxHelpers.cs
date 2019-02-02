@@ -60,5 +60,18 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
 
             return identifier;
         }
+
+        public static SyntaxToken UppercaseIdentifierFirstLetter(SyntaxToken identifier)
+        {
+            ThrowHelpers.ThrowIfNotIdentifier(nameof(identifier), identifier);
+
+            if (identifier.Value is string s && s.Length >= 1)
+            {
+                var newString = char.ToUpperInvariant(s[0]) + (s.Length >= 2 ? s.Substring(1) : string.Empty);
+                return SyntaxFactory.Identifier(newString);
+            }
+
+            return identifier;
+        }
     }
 }

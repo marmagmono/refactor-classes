@@ -1,23 +1,22 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
 {
     public static class MemberDeclarationSyntaxExtensions
     {
         public static bool IsIndexer(this MemberDeclarationSyntax m) =>
-            m is IndexerDeclarationSyntax;
+            m.IsKind(SyntaxKind.IndexerDeclaration);
 
         public static bool IsField(this MemberDeclarationSyntax m) =>
-            m is FieldDeclarationSyntax;
+            m.IsKind(SyntaxKind.FieldDeclaration);
 
         public static bool IsProperty(this MemberDeclarationSyntax m) =>
-            m is PropertyDeclarationSyntax;
+            m.IsKind(SyntaxKind.PropertyDeclaration);
 
         public static bool IsEvent(this MemberDeclarationSyntax m) =>
-            m is EventFieldDeclarationSyntax // like: event EventHandler ev;
-            || m is EventDeclarationSyntax; // event with add and remove parts
+            m.IsKind(SyntaxKind.EventFieldDeclaration) // like: event EventHandler ev;
+            || m.IsKind(SyntaxKind.EventDeclaration); // event with add and remove parts
     }
 }

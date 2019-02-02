@@ -28,13 +28,28 @@ namespace RefactorClasses.CodeRefactoringUtils
         {
             var document = context.Document;
 
-            var (root, token) = await GetSyntaxContext(context);
+            var (root, token) = await GetSyntaxContext(context).ConfigureAwait(false);
             if (token.Parent == null) return (null, null);
 
             var syntax = token.Parent.FirstAncestorOrSelf<TNode>();
             if (syntax == null) return (null, null);
 
             return (document, syntax);
+        }
+
+        public static async Task<(Document doc, ClassDeclarationSyntax)>
+            GetClassIfOnClassIdentifier(this CodeRefactoringContext context)
+        {
+            var document = context.Document;
+
+            var (root, token) = await GetSyntaxContext(context).ConfigureAwait(false);
+            if (token.Parent == null) return (null, null);
+
+            if (!token.IsKind(SyntaxKind.IdentifierToken)
+                || !token.Parent.IsKind(SyntaxKind.ClassDeclaration))
+                return (null, null);
+
+            return (document, token.Parent as ClassDeclarationSyntax);
         }
 
         public static async Task<(Document doc, VariableDeclaratorSyntax)>

@@ -1,8 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RefactorClasses.RoslynUtils.DeclarationGeneration
 {
@@ -15,5 +12,13 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
         public static SyntaxToken Comma => SyntaxFactory.Token(SyntaxKind.CommaToken);
 
         public static SyntaxToken OpenParen => SyntaxFactory.Token(SyntaxKind.OpenParenToken);
+
+        public static SyntaxToken OpenBrace => SyntaxFactory.Token(SyntaxKind.OpenBraceToken);
+
+        public static SyntaxToken CloseBrace => SyntaxFactory.Token(SyntaxKind.CloseBraceToken);
+
+        public static SyntaxToken Public => SyntaxFactory.Token(SyntaxKind.PublicKeyword);
+
+        public static SyntaxToken Sealed => SyntaxFactory.Token(SyntaxKind.SealedKeyword);
     }
 }

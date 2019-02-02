@@ -15,6 +15,18 @@ namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
             && !HasFields(classDeclarationSyntax)
             && !HasIndexers(classDeclarationSyntax);
 
+        public static bool CanBeDiscriminatedUnionBaseType(ClassDeclarationSyntax classDeclarationSyntax) =>
+            !IsStatic(classDeclarationSyntax)
+            && !IsPartial(classDeclarationSyntax)
+            && !HasEvents(classDeclarationSyntax)
+            && !HasFields(classDeclarationSyntax)
+            && !HasProperties(classDeclarationSyntax)
+            && !HasIndexers(classDeclarationSyntax)
+            && IsAbstract(classDeclarationSyntax);
+
+        public static bool IsAbstract(ClassDeclarationSyntax classDeclarationSyntax) =>
+            classDeclarationSyntax.Modifiers.Any(m => m.Kind() == SyntaxKind.AbstractKeyword);
+
         public static bool IsStatic(ClassDeclarationSyntax classDeclarationSyntax) =>
             classDeclarationSyntax.Modifiers.Any(m => m.Kind() == SyntaxKind.StaticKeyword);
 

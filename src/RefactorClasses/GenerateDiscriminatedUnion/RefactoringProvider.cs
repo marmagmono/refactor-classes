@@ -17,6 +17,9 @@ using System.Threading.Tasks;
 
 namespace RefactorClasses.GenerateDiscriminatedUnion
 {
+    using SF = SyntaxFactory;
+    using SH = SyntaxHelpers;
+
     [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "GenerateDiscriminatedUnion"), Shared]
     public class RefactoringProvider : CodeRefactoringProvider
     {
@@ -59,74 +62,132 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
             CancellationToken cancellationToken)
         {
             var duMembers = GetCandidateMethods(classDeclarationSyntax);
+            var baseClassIdentifier = SF.IdentifierName(classDeclarationSyntax.Identifier);
 
             // TODO: Methods returning types defined in other assemblies should probably be rejected,
-            // but lets say it is up to user to use this refactoring wisely.
-            List<ClassDeclarationSyntax> classesToAdd = new List<ClassDeclarationSyntax>(duMembers.Count);
+            // but lets say it is user's responsibility to use this refactoring wisely.
+            var rootNode = classDeclarationSyntax.Parent;
             foreach (var duCandidate in duMembers)
             {
                 var returnIdentifier = duCandidate.ReturnType as IdentifierNameSyntax;
                 if (returnIdentifier == null) return document;
 
-                var className = returnIdentifier.Identifier;
-
-                // parameter -> to property
-                // to argument -> in constructor call
+                var generatedClassName = returnIdentifier.Identifier;
                 var properties = duCandidate.ParameterList.Parameters.Select(ToProperty).ToList();
                 var constructorDeclaration = ConstructorGenerationHelper.FromPropertiesWithAssignments(
-                    className,
+                    generatedClassName,
                     properties);
                 var members = new List<MemberDeclarationSyntax>(properties);
-                members.Add(constructorDeclaration);
-
-                classesToAdd.Add(CreateClass(className, members).WithAdditionalAnnotations(Formatter.Annotation));
+                rootNode = UpdateOrAddCaseDefinition(rootNode, generatedClassName, baseClassIdentifier, properties, constructorDeclaration);
             }
 
-            // TODO: replace old definitions if needed ?
             // TODO: Generate method call
-            SyntaxNode newNode = null;
-            if (classDeclarationSyntax.Parent is NamespaceDeclarationSyntax namespaceDeclaration)
-            {
-                newNode = namespaceDeclaration.AddMembers(classesToAdd.ToArray());
-            }
-            else if (classDeclarationSyntax.Parent is CompilationUnitSyntax compilationUnit)
-            {
-                newNode = compilationUnit.AddMembers(classesToAdd.ToArray());
-            }
-            else
-            {
-                return document;
-            }
 
             // Update document
             var tree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
             var root = await tree.GetRootAsync(cancellationToken).ConfigureAwait(false);
-            var newRoot = root.ReplaceNode(classDeclarationSyntax.Parent, newNode);
+            var newRoot = root.ReplaceNode(classDeclarationSyntax.Parent, rootNode);
             var newDocument = document.WithSyntaxRoot(newRoot);
             return newDocument;
         }
 
+        private static SyntaxNode UpdateOrAddCaseDefinition(
+            SyntaxNode namespaceNode,
+            SyntaxToken className,
+            IdentifierNameSyntax baseClassIdentifier,
+            List<PropertyDeclarationSyntax> properties,
+            ConstructorDeclarationSyntax constructorDeclaration)
+        {
+            var currentDefinition = FindCurrentCaseDeclaration(namespaceNode, className);
+            if (currentDefinition == null)
+            {
+                var members = new List<MemberDeclarationSyntax>(properties)
+                {
+                    constructorDeclaration
+                };
+                return
+                    AddMemberNode(
+                        namespaceNode,
+                        CreateClass(className, baseClassIdentifier, members)
+                            .WithAdditionalAnnotations(Formatter.Annotation));
+            }
+            else
+            {
+                var overrideMethods = currentDefinition.GetOverrideMethods();
+                var overrideProperties = currentDefinition.GetOverrideProperties();
+
+                var newMembers =
+                    properties.Cast<MemberDeclarationSyntax>()
+                        .Concat(overrideProperties)
+                        .Concat(overrideMethods)
+                        .Concat(Enumerable.Repeat(constructorDeclaration, 1));
+                return namespaceNode.ReplaceNode(
+                    currentDefinition,
+                    CreateClass(className, baseClassIdentifier, newMembers)
+                            .WithAdditionalAnnotations(Formatter.Annotation));
+            }
+        }
+
+        private static ClassDeclarationSyntax FindCurrentCaseDeclaration(SyntaxNode syntaxNode, SyntaxToken className)
+        {
+            if (syntaxNode is NamespaceDeclarationSyntax namespaceDeclaration)
+            {
+                return FindClass(namespaceDeclaration.Members, className);
+            }
+            else if (syntaxNode is CompilationUnitSyntax compilationUnit)
+            {
+                return FindClass(compilationUnit.Members, className);
+            }
+            else
+            {
+                return null;
+            }
+
+            ClassDeclarationSyntax FindClass(SyntaxList<MemberDeclarationSyntax> members, SyntaxToken identifier) =>
+                members.FirstOrDefault(m => m.IsKind(SyntaxKind.ClassDeclaration)
+                                            && ((ClassDeclarationSyntax)m).Identifier.ValueText.Equals(identifier.ValueText))
+                as ClassDeclarationSyntax;
+        }
+
+        private static SyntaxNode AddMemberNode(SyntaxNode namespaceNode, MemberDeclarationSyntax member)
+        {
+            if (namespaceNode is NamespaceDeclarationSyntax namespaceDeclaration)
+            {
+                return namespaceDeclaration.AddMembers(member);
+            }
+            else if (namespaceNode is CompilationUnitSyntax compilationUnit)
+            {
+                return compilationUnit.AddMembers(member);
+            }
+            else
+            {
+                return namespaceNode;
+            }
+        }
+
         private static PropertyDeclarationSyntax ToProperty(ParameterSyntax parameter) =>
-            SyntaxFactory.PropertyDeclaration(
+            SF.PropertyDeclaration(
                 parameter.Type,
                 SyntaxHelpers.UppercaseIdentifierFirstLetter(parameter.Identifier))
-            .WithModifiers(SyntaxFactory.TokenList(Tokens.Public))
+            .WithModifiers(SF.TokenList(Tokens.Public))
             .WithAccessorList(
-                SyntaxFactory.AccessorList(
+                SF.AccessorList(
                     Tokens.OpenBrace,
                     SyntaxHelpers.List(
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                            .WithLeadingTrivia(SyntaxFactory.Whitespace(" "))
-                            .WithTrailingTrivia(SyntaxFactory.Whitespace(" "))
+                        SF.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                            .WithLeadingTrivia(SF.Whitespace(" "))
+                            .WithTrailingTrivia(SF.Whitespace(" "))
                             .WithSemicolonToken(Tokens.Semicolon)),
                     Tokens.CloseBrace));
 
         private static ClassDeclarationSyntax CreateClass(
             SyntaxToken identifier,
+            IdentifierNameSyntax baseIndentifier,
             IEnumerable<MemberDeclarationSyntax> members) =>
-            SyntaxFactory.ClassDeclaration(identifier)
-                .WithModifiers(SyntaxFactory.TokenList(Tokens.Public, Tokens.Sealed))
-                .WithMembers(SyntaxFactory.List(members));
+            SF.ClassDeclaration(identifier)
+                .WithBaseList(SH.BaseList(baseIndentifier))
+                .WithModifiers(SF.TokenList(Tokens.Public, Tokens.Sealed))
+                .WithMembers(SF.List(members));
 
         private static List<MethodDeclarationSyntax> GetCandidateMethods(ClassDeclarationSyntax classDeclarationSyntax) =>
             ClassDeclarationSyntaxAnalysis.GetMembers<MethodDeclarationSyntax>(classDeclarationSyntax)

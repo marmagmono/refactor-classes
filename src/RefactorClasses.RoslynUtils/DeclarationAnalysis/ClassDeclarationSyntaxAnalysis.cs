@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,6 +56,16 @@ namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
         public static IEnumerable<VariableDeclaratorSyntax> GetFieldVariableDeclarations(ClassDeclarationSyntax classDeclarationSyntax) =>
             GetMembers<FieldDeclarationSyntax>(classDeclarationSyntax).SelectMany(f => f.Declaration.Variables);
 
+        public static IEnumerable<MethodDeclarationSyntax> GetOverrideMethods(this ClassDeclarationSyntax classDeclarationSyntax) =>
+            classDeclarationSyntax
+                .GetMembers<MethodDeclarationSyntax>()
+                .Where(m => m.Modifiers.Any(mod => mod.IsKind(SyntaxKind.OverrideKeyword)));
+
+        public static IEnumerable<PropertyDeclarationSyntax> GetOverrideProperties(this ClassDeclarationSyntax classDeclarationSyntax) =>
+            classDeclarationSyntax
+                .GetMembers<PropertyDeclarationSyntax>()
+                .Where(m => m.Modifiers.Any(mod => mod.IsKind(SyntaxKind.OverrideKeyword)));
+
         public static (bool conditionTrue, ConstructorDeclarationSyntax nonTrivialConstructor)
             HasAtMostOneNoneTrivialConstructor(ClassDeclarationSyntax classDeclarationSyntax)
         {
@@ -91,7 +102,7 @@ namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
             ClassDeclarationSyntax classDeclarationSyntax) =>
                 GetMembers<ConstructorDeclarationSyntax>(classDeclarationSyntax);
 
-        public static IEnumerable<T> GetMembers<T>(ClassDeclarationSyntax classDeclarationSyntax)
+        public static IEnumerable<T> GetMembers<T>(this ClassDeclarationSyntax classDeclarationSyntax)
             where T : class =>
             classDeclarationSyntax?.Members
                 .Where(m => m is T)

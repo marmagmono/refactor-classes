@@ -20,5 +20,7 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
         public static SyntaxToken Public => SyntaxFactory.Token(SyntaxKind.PublicKeyword);
 
         public static SyntaxToken Sealed => SyntaxFactory.Token(SyntaxKind.SealedKeyword);
+
+        public static SyntaxToken Override => SyntaxFactory.Token(SyntaxKind.OverrideKeyword);
     }
 }

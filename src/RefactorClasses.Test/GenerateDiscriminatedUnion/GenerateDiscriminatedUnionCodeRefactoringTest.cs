@@ -357,7 +357,7 @@ public sealed class SecondCase : DuBase
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_ToStringWithoutAllProperties_IsReplaced_WithCompleteOne()
+        public async Task Class_SimpleDuProperties_ThreeCases()
         {
             // Arrange
             var testString = @"
@@ -372,15 +372,17 @@ public enum AnEnum1
     SecondThing = 2
 }
 
-public class Class2<T>
+public abstract class DuBase
 {
-    public AnEnum1 EnumProp { get; }
+    public abstract string Property { get; }
 
-    public T Prop1 { get; }
+    public abstract void Something();
 
-    public int Klo { get; }
+    public static FirstCase FirstCase(int number, string name, AnEnum1 enumField) { }
 
-    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp}"";
+    public static SecondCase SecondCase() { }
+
+    public static ThirdCase ThirdCase(int prop) => new ThirdCase(prop);
 }
 ";
             var expectedText = @"
@@ -395,21 +397,185 @@ public enum AnEnum1
     SecondThing = 2
 }
 
-public class Class2<T>
+public abstract class DuBase
 {
-    public AnEnum1 EnumProp { get; }
+    public abstract string Property { get; }
 
-    public T Prop1 { get; }
+    public abstract void Something();
 
-    public int Klo { get; }
+    public static FirstCase FirstCase(int number, string name, AnEnum1 enumField) => new FirstCase(number, name, enumField);
 
-    public override string ToString() => $""{nameof(Class2)} {nameof(EnumProp)}={EnumProp} {nameof(Prop1)}={Prop1} {nameof(Klo)}={Klo}"";
+    public static SecondCase SecondCase() => new SecondCase();
+
+    public static ThirdCase ThirdCase(int prop) => new ThirdCase(prop);
 }
-";
+
+public sealed class FirstCase : DuBase
+{
+    public int Number { get; }
+    public string Name { get; }
+    public AnEnum1 EnumField { get; }
+
+    public FirstCase(int number, string name, AnEnum1 enumField)
+    {
+        Number = number;
+        Name = name;
+        EnumField = enumField;
+    }
+}
+
+public sealed class SecondCase : DuBase
+{
+}
+
+public sealed class ThirdCase : DuBase
+{
+    public int Prop { get; }
+
+    public ThirdCase(int prop)
+    {
+        Prop = prop;
+    }
+}";
 
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(239, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(198, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task Class_SimpleDuProperties_OverridesArePreserved()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+public abstract class DuBase
+{
+    public abstract string Property { get; }
+
+    public abstract void Something();
+
+    public static FirstCase FirstCase(int number, string name, AnEnum1 enumField) { }
+
+    public static SecondCase SecondCase() { }
+
+    public static ThirdCase ThirdCase(int prop) => new ThirdCase(prop);
+}
+
+public sealed class SecondCase : DuBase
+{
+    public override string Property => ""Somethig"";
+
+    public override void Something()
+    {
+        Console.WriteLine();
+    }
+}
+
+public sealed class ThirdCase : DuBase
+{
+    public override string Property => ""Somethig"";
+
+    public override void Something()
+    {
+        Console.WriteLine();
+    }
+
+    public ThirdCase()
+    {
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+public enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+public abstract class DuBase
+{
+    public abstract string Property { get; }
+
+    public abstract void Something();
+
+    public static FirstCase FirstCase(int number, string name, AnEnum1 enumField) => new FirstCase(number, name, enumField);
+
+    public static SecondCase SecondCase() => new SecondCase();
+
+    public static ThirdCase ThirdCase(int prop) => new ThirdCase(prop);
+}
+
+public sealed class FirstCase : DuBase
+{
+    public int Number { get; }
+    public string Name { get; }
+    public AnEnum1 EnumField { get; }
+
+    public FirstCase(int number, string name, AnEnum1 enumField)
+    {
+        Number = number;
+        Name = name;
+        EnumField = enumField;
+    }
+}
+
+public sealed class SecondCase : DuBase
+{
+    public override string Property => ""Somethig"";
+
+    public override void Something()
+    {
+        Console.WriteLine();
+    }
+}
+
+public sealed class ThirdCase : DuBase
+{
+    public int Prop { get; }
+
+    public override string Property => ""Somethig"";
+
+    public override void Something()
+    {
+        Console.WriteLine();
+    }
+
+    public ThirdCase(int prop)
+    {
+        Prop = prop;
+    }
+}";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            var context = CreateRefactoringContext(document, new TextSpan(198, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act

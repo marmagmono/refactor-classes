@@ -21,7 +21,7 @@ namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
             && !IsPartial(classDeclarationSyntax)
             && !HasEvents(classDeclarationSyntax)
             && !HasFields(classDeclarationSyntax)
-            && !HasProperties(classDeclarationSyntax)
+            && !HasNonAbstractProperties(classDeclarationSyntax)
             && !HasIndexers(classDeclarationSyntax)
             && IsAbstract(classDeclarationSyntax);
 
@@ -46,6 +46,12 @@ namespace RefactorClasses.RoslynUtils.DeclarationAnalysis
 
         public static bool HasProperties(ClassDeclarationSyntax classDeclarationSyntax) =>
             classDeclarationSyntax.Members.Any(MemberDeclarationSyntaxExtensions.IsProperty);
+
+        public static bool HasNonAbstractProperties(ClassDeclarationSyntax classDeclarationSyntax) =>
+            classDeclarationSyntax
+                .GetMembers<PropertyDeclarationSyntax>()
+                .Where(p => !p.Modifiers.Any(m => m.IsKind(SyntaxKind.AbstractKeyword)))
+                .Count() > 0;
 
         public static IEnumerable<PropertyDeclarationSyntax> GetPropertyDeclarations(ClassDeclarationSyntax classDeclarationSyntax) =>
             GetMembers<PropertyDeclarationSyntax>(classDeclarationSyntax);

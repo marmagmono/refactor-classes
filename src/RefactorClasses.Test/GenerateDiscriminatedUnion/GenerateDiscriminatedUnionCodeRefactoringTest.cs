@@ -299,6 +299,8 @@ public enum AnEnum1
 public abstract class DuBase
 {
     public static FirstCase FirstCase(int number, string name, AnEnum1 enumField) { }
+
+    public static SecondCase SecondCase() { }
 }
 ";
             var expectedText = @"
@@ -316,6 +318,8 @@ public enum AnEnum1
 public abstract class DuBase
 {
     public static FirstCase FirstCase(int number, string name, AnEnum1 enumField) => new FirstCase(number, name, enumField);
+
+    public static SecondCase SecondCase() => new SecondCase();
 }
 
 public sealed class FirstCase : DuBase
@@ -330,6 +334,10 @@ public sealed class FirstCase : DuBase
         Name = name;
         EnumField = enumField;
     }
+}
+
+public sealed class SecondCase : DuBase
+{
 }
 ";
 

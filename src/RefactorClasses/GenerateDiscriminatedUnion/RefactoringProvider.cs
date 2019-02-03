@@ -19,6 +19,7 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
 {
     using SF = SyntaxFactory;
     using SH = SyntaxHelpers;
+    using EGH = ExpressionGenerationHelper;
 
     [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "GenerateDiscriminatedUnion"), Shared]
     public class RefactoringProvider : CodeRefactoringProvider
@@ -61,18 +62,25 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
             ClassDeclarationSyntax classDeclarationSyntax,
             CancellationToken cancellationToken)
         {
+            var rootNode = classDeclarationSyntax.Parent;
+            if (rootNode == null) return document;
+
             var duMembers = GetCandidateMethods(classDeclarationSyntax);
-            var baseClassIdentifier = SF.IdentifierName(classDeclarationSyntax.Identifier);
+            if (duMembers.Count == 0) return document;
+
+            var factoryMethodRewriter = new FactoryMethodRewriter();
+            var newClassDeclaration = factoryMethodRewriter.Visit(classDeclarationSyntax);
+            rootNode = rootNode.ReplaceNode(classDeclarationSyntax, newClassDeclaration);
 
             // TODO: Methods returning types defined in other assemblies should probably be rejected,
             // but lets say it is user's responsibility to use this refactoring wisely.
-            var rootNode = classDeclarationSyntax.Parent;
+
+            var baseClassIdentifier = SF.IdentifierName(classDeclarationSyntax.Identifier);
             foreach (var duCandidate in duMembers)
             {
-                var returnIdentifier = duCandidate.ReturnType as IdentifierNameSyntax;
-                if (returnIdentifier == null) return document;
+                var generatedClassName = GetGeneratedClassName(duCandidate);
+                if (generatedClassName == default) return document;
 
-                var generatedClassName = returnIdentifier.Identifier;
                 var properties = duCandidate.ParameterList.Parameters.Select(ToProperty).ToList();
                 var constructorDeclaration = ConstructorGenerationHelper.FromPropertiesWithAssignments(
                     generatedClassName,
@@ -81,7 +89,6 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
                 rootNode = UpdateOrAddCaseDefinition(rootNode, generatedClassName, baseClassIdentifier, properties, constructorDeclaration);
             }
 
-            // TODO: Generate method call
 
             // Update document
             var tree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
@@ -165,6 +172,14 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
             }
         }
 
+        private static SyntaxToken GetGeneratedClassName(MethodDeclarationSyntax methodDeclaration)
+        {
+            var returnIdentifier = methodDeclaration.ReturnType as IdentifierNameSyntax;
+            if (returnIdentifier == null) return default;
+
+            return returnIdentifier.Identifier;
+        }
+
         private static PropertyDeclarationSyntax ToProperty(ParameterSyntax parameter) =>
             SF.PropertyDeclaration(
                 parameter.Type,
@@ -191,7 +206,36 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
 
         private static List<MethodDeclarationSyntax> GetCandidateMethods(ClassDeclarationSyntax classDeclarationSyntax) =>
             ClassDeclarationSyntaxAnalysis.GetMembers<MethodDeclarationSyntax>(classDeclarationSyntax)
-                .Where(m => m.IsStatic() && !m.ReturnsPredefinedType())
+                .Where(IsDuCandidateMethod)
                 .ToList();
+
+        private static bool IsDuCandidateMethod(MethodDeclarationSyntax m) =>
+            m.IsStatic() && !m.ReturnsPredefinedType();
+
+        private class FactoryMethodRewriter : CSharpSyntaxRewriter
+        {
+            public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+            {
+                if (IsDuCandidateMethod(node))
+                {
+                    var generatedClassName = GetGeneratedClassName(node);
+                    if (generatedClassName == default) return base.VisitMethodDeclaration(node);
+
+                    var createObjectCall = EGH.CreateObject(
+                        SF.IdentifierName(generatedClassName),
+                        node.ParameterList.Parameters.Select(ToArgument).ToArray());
+
+                    return node
+                        .WithBody(null)
+                        .WithExpressionBody(EGH.Arrow(createObjectCall))
+                        .WithSemicolonToken(Tokens.Semicolon);
+                }
+
+                return base.VisitMethodDeclaration(node);
+            }
+
+            private static ArgumentSyntax ToArgument(ParameterSyntax parameter) =>
+                SH.ArgumentFromIdentifier(parameter.Identifier);
+        }
     }
 }

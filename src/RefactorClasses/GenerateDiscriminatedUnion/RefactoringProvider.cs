@@ -82,9 +82,11 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
                 if (generatedClassName == default) return document;
 
                 var properties = duCandidate.ParameterList.Parameters.Select(ToProperty).ToList();
-                var constructorDeclaration = ConstructorGenerationHelper.FromPropertiesWithAssignments(
-                    generatedClassName,
-                    properties);
+                var constructorDeclaration = properties.Count > 0 ?
+                    ConstructorGenerationHelper.FromPropertiesWithAssignments(
+                        generatedClassName,
+                        properties)
+                    : null;
                 var members = new List<MemberDeclarationSyntax>(properties);
                 rootNode = UpdateOrAddCaseDefinition(rootNode, generatedClassName, baseClassIdentifier, properties, constructorDeclaration);
             }
@@ -108,10 +110,9 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
             var currentDefinition = FindCurrentCaseDeclaration(namespaceNode, className);
             if (currentDefinition == null)
             {
-                var members = new List<MemberDeclarationSyntax>(properties)
-                {
-                    constructorDeclaration
-                };
+                var members = new List<MemberDeclarationSyntax>(properties);
+                if (constructorDeclaration != null) members.Add(constructorDeclaration);
+
                 return
                     AddMemberNode(
                         namespaceNode,
@@ -126,8 +127,11 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
                 var newMembers =
                     properties.Cast<MemberDeclarationSyntax>()
                         .Concat(overrideProperties)
-                        .Concat(overrideMethods)
-                        .Concat(Enumerable.Repeat(constructorDeclaration, 1));
+                        .Concat(overrideMethods);
+
+                if (constructorDeclaration != null)
+                    newMembers.Concat(Enumerable.Repeat(constructorDeclaration, 1));
+
                 return namespaceNode.ReplaceNode(
                     currentDefinition,
                     CreateClass(className, baseClassIdentifier, newMembers)
@@ -228,7 +232,8 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
                     return node
                         .WithBody(null)
                         .WithExpressionBody(EGH.Arrow(createObjectCall))
-                        .WithSemicolonToken(Tokens.Semicolon);
+                        .WithSemicolonToken(Tokens.Semicolon.WithTrailingTrivia(
+                            SF.TriviaList(Settings.EndOfLine)));
                 }
 
                 return base.VisitMethodDeclaration(node);

@@ -281,7 +281,7 @@ namespace RefactorClasses.Test.GenerateDiscriminatedUnion
         }
 
         [TestMethod]
-        public async Task Class_WithSomeProperties_ToStringMatchingPropertiesIsGenerated()
+        public async Task Class_SimpleDuProperties_CorrectClassesAreGenerated()
         {
             // Arrange
             var testString = @"
@@ -338,8 +338,7 @@ public sealed class FirstCase : DuBase
 
 public sealed class SecondCase : DuBase
 {
-}
-";
+}";
 
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);

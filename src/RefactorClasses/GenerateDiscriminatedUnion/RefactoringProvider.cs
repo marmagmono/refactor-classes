@@ -37,17 +37,6 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
                     && !classDeclarationSyntax.Parent.IsKind(SyntaxKind.CompilationUnit)))
                 return;
 
-            // Find all static methods
-            // Convert each of them into type:
-            // - parameters into properties
-            // - generate constructor from properties - or empty if no properties
-            // - generate Equals and Hashcode ?
-            // - it is probably safer to regenerate everytime, but what if the
-            //   classes implement an abstract member or interface ?
-            // - keep non standard overrides, explicit interface implementations ?
-            // - or detect abstract members or members of interface (properties only)?
-            // - update call to constructor in current class
-
             var duMembers = GetCandidateMethods(classDeclarationSyntax);
             if (duMembers.Count == 0) return;
 
@@ -72,11 +61,18 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
             var newClassDeclaration = factoryMethodRewriter.Visit(classDeclarationSyntax);
             rootNode = rootNode.ReplaceNode(classDeclarationSyntax, newClassDeclaration);
 
+            List<(MethodDeclarationSyntax method, ClassDeclarationSyntax cl)> candidates =
+                duMembers.Select(m => (m, FindCurrentCaseDeclaration(rootNode, GetGeneratedClassName(m))))
+                .ToList();
+
+            var declarationsCleaner = new ClassOccurencesCleaner(candidates.Select(p => p.cl).Where(p => p != null).ToList());
+            rootNode = declarationsCleaner.Visit(rootNode);
+
             // TODO: Methods returning types defined in other assemblies should probably be rejected,
             // but lets say it is user's responsibility to use this refactoring wisely.
 
             var baseClassIdentifier = SF.IdentifierName(classDeclarationSyntax.Identifier);
-            foreach (var duCandidate in duMembers)
+            foreach (var (duCandidate, prevDeclaration) in candidates)
             {
                 var generatedClassName = GetGeneratedClassName(duCandidate);
                 if (generatedClassName == default) return document;
@@ -88,9 +84,8 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
                         properties)
                     : null;
                 var members = new List<MemberDeclarationSyntax>(properties);
-                rootNode = UpdateOrAddCaseDefinition(rootNode, generatedClassName, baseClassIdentifier, properties, constructorDeclaration);
+                rootNode = UpdateOrAddCaseDefinition(rootNode, generatedClassName, baseClassIdentifier, properties, constructorDeclaration, prevDeclaration);
             }
-
 
             // Update document
             var tree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
@@ -105,38 +100,27 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
             SyntaxToken className,
             IdentifierNameSyntax baseClassIdentifier,
             List<PropertyDeclarationSyntax> properties,
-            ConstructorDeclarationSyntax constructorDeclaration)
+            ConstructorDeclarationSyntax constructorDeclaration,
+            ClassDeclarationSyntax previousDeclaration)
         {
-            var currentDefinition = FindCurrentCaseDeclaration(namespaceNode, className);
-            if (currentDefinition == null)
-            {
-                var members = new List<MemberDeclarationSyntax>(properties);
-                if (constructorDeclaration != null) members.Add(constructorDeclaration);
+            var overrideMethods = previousDeclaration != null ?
+                previousDeclaration.GetOverrideMethods()
+                : Enumerable.Empty<MethodDeclarationSyntax>();
+            var overrideProperties = previousDeclaration != null ?
+                previousDeclaration.GetOverrideProperties()
+                : Enumerable.Empty<PropertyDeclarationSyntax>();
 
-                return
-                    AddMemberNode(
+            var members =
+                    properties.Cast<MemberDeclarationSyntax>()
+                        .Concat(overrideProperties)
+                        .Concat(overrideMethods).ToList();
+            if (constructorDeclaration != null)
+                members.Add(constructorDeclaration);
+
+            return AddMemberNode(
                         namespaceNode,
                         CreateClass(className, baseClassIdentifier, members)
                             .WithAdditionalAnnotations(Formatter.Annotation));
-            }
-            else
-            {
-                var overrideMethods = currentDefinition.GetOverrideMethods();
-                var overrideProperties = currentDefinition.GetOverrideProperties();
-
-                var newMembers =
-                    properties.Cast<MemberDeclarationSyntax>()
-                        .Concat(overrideProperties)
-                        .Concat(overrideMethods);
-
-                if (constructorDeclaration != null)
-                    newMembers.Concat(Enumerable.Repeat(constructorDeclaration, 1));
-
-                return namespaceNode.ReplaceNode(
-                    currentDefinition,
-                    CreateClass(className, baseClassIdentifier, newMembers)
-                            .WithAdditionalAnnotations(Formatter.Annotation));
-            }
         }
 
         private static ClassDeclarationSyntax FindCurrentCaseDeclaration(SyntaxNode syntaxNode, SyntaxToken className)
@@ -241,6 +225,26 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
 
             private static ArgumentSyntax ToArgument(ParameterSyntax parameter) =>
                 SH.ArgumentFromIdentifier(parameter.Identifier);
+        }
+
+        private class ClassOccurencesCleaner : CSharpSyntaxRewriter
+        {
+            private readonly List<ClassDeclarationSyntax> classDeclarationSyntaxes;
+
+            public ClassOccurencesCleaner(List<ClassDeclarationSyntax> classDeclarationSyntaxes)
+            {
+                this.classDeclarationSyntaxes = classDeclarationSyntaxes;
+            }
+
+            public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+            {
+                if (classDeclarationSyntaxes.FirstOrDefault(c => c.Equals(node)) != null)
+                {
+                    return null;
+                }
+
+                return base.VisitClassDeclaration(node);
+            }
         }
     }
 }

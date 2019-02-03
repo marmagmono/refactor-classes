@@ -505,8 +505,7 @@ public sealed class ThirdCase : DuBase
     public ThirdCase()
     {
     }
-}
-";
+}";
             var expectedText = @"
 using System;
 using System.Collections.Generic;

@@ -10,5 +10,8 @@ namespace RefactorClasses
     {
         // TODO: CarriageReturnLineFeed vs CarriageReturn
         public static SyntaxTrivia EndOfLine => SyntaxFactory.CarriageReturnLineFeed;
+
+        // TODO: read of editor config ?
+        public static string IndentOneLevel => "    ";
     }
 }

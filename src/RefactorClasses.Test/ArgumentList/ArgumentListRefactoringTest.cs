@@ -11,13 +11,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using TestHelper;
 
-namespace RefactorClasses.Test.ParameterList
+namespace RefactorClasses.Test.ArgumentList
 {
     [TestClass]
-    public class ParameterListRefactoringTest : DiagnosticVerifier
+    public class ArgumentListRefactoringTest : DiagnosticVerifier
     {
         [TestMethod]
-        public async Task Refactoring_IgnoresEmptyParameterList()
+        public async Task Refactoring_IgnoresEmptyArgumentList()
         {
             // Arrange
             var testString = @"
@@ -34,8 +34,13 @@ internal enum AnEnum1
 
 internal class Class3<T> where T : class
 {
+    private void Something()
+    {
+    }
+
     public Class3()
     {
+        Something();
         EnumProp = enumProp;
         Klo = klo != 0 ? klo : throw new Exception();
         Prop1 = aaa ?? throw new NullReferenceException();
@@ -44,7 +49,7 @@ internal class Class3<T> where T : class
 ";
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(237, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(311, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act
@@ -55,7 +60,165 @@ internal class Class3<T> where T : class
         }
 
         [TestMethod]
-        public async Task SingleLineParameterList_IsConvertedToMultilineParameterList()
+        public async Task SingleLineArgumentList_IsConvertedToMultilineArgumentList()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+internal enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+internal class Class3<T> where T : class
+{
+    private void Something(AnEnum1 enumProp, ref int klo, T aaa)
+    {
+    }
+
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
+    {
+        Something(enumProp, ref klo, aaa);
+
+        EnumProp = enumProp;
+        Klo = klo != 0 ? klo : throw new Exception();
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+internal enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+internal class Class3<T> where T : class
+{
+    private void Something(AnEnum1 enumProp, ref int klo, T aaa)
+    {
+    }
+
+    public Class3(AnEnum1 enumProp, int klo, T aaa)
+    {
+        Something(
+            enumProp,
+            ref klo,
+            aaa);
+
+        EnumProp = enumProp;
+        Klo = klo != 0 ? klo : throw new Exception();
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            var context = CreateRefactoringContext(document, new TextSpan(394, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task SingleLineArgumentList_IsConvertedToMultilineArgumentList1()
+        {
+            // Arrange
+            var testString = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+internal enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+internal class Class3<T> where T : class
+{
+    private void OtherThing(AnEnum1 enumProp)
+    {
+    }
+
+    public Class3(AnEnum1 enumProp)
+    {
+        OtherThing(enumProp);
+
+        EnumProp = enumProp;
+        Klo = klo != 0 ? klo : throw new Exception();
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+}
+";
+            var expectedText = @"
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+internal enum AnEnum1
+{
+    FirstThing,
+    SecondThing = 2
+}
+
+internal class Class3<T> where T : class
+{
+    private void OtherThing(AnEnum1 enumProp)
+    {
+    }
+
+    public Class3(AnEnum1 enumProp)
+    {
+        OtherThing(
+            enumProp);
+
+        EnumProp = enumProp;
+        Klo = klo != 0 ? klo : throw new Exception();
+        Prop1 = aaa ?? throw new NullReferenceException();
+    }
+}
+";
+
+            CodeAction registeredAction = null;
+            var document = CreateDocument(testString);
+            var context = CreateRefactoringContext(document, new TextSpan(352, 0), a => registeredAction = a);
+            var sut = CreateSut();
+
+            // Act
+            await sut.ComputeRefactoringsAsync(context);
+            Assert.IsNotNull(registeredAction);
+
+            var changedDocument = await ApplyRefactoring(document, registeredAction);
+            var changedText = (await changedDocument.GetTextAsync()).ToString();
+
+            // Assert
+            Assert.AreEqual(expectedText, changedText);
+        }
+
+        [TestMethod]
+        public async Task MultilineArgumentList_IsConvertedToSingleLineArgumentList()
         {
             // Arrange
             var testString = @"
@@ -74,223 +237,11 @@ internal class Class3<T> where T : class
 {
     public Class3(AnEnum1 enumProp, int klo, T aaa)
     {
-        EnumProp = enumProp;
-        Klo = klo != 0 ? klo : throw new Exception();
-        Prop1 = aaa ?? throw new NullReferenceException();
-    }
-}
-";
-            var expectedText = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+        Something(
+            enumProp,
+            ref klo,
+            aaa);
 
-internal enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-internal class Class3<T> where T : class
-{
-    public Class3(
-        AnEnum1 enumProp,
-        int klo,
-        T aaa)
-    {
-        EnumProp = enumProp;
-        Klo = klo != 0 ? klo : throw new Exception();
-        Prop1 = aaa ?? throw new NullReferenceException();
-    }
-}
-";
-
-            CodeAction registeredAction = null;
-            var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(250, 0), a => registeredAction = a);
-            var sut = CreateSut();
-
-            // Act
-            await sut.ComputeRefactoringsAsync(context);
-            Assert.IsNotNull(registeredAction);
-
-            var changedDocument = await ApplyRefactoring(document, registeredAction);
-            var changedText = (await changedDocument.GetTextAsync()).ToString();
-
-            // Assert
-            Assert.AreEqual(expectedText, changedText);
-        }
-
-        [TestMethod]
-        public async Task SingleLineParameterList_IsConvertedToMultilineParameterList1()
-        {
-            // Arrange
-            var testString = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-internal enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-internal class Class3<T> where T : class
-{
-    public Class3(AnEnum1 enumProp)
-    {
-        EnumProp = enumProp;
-        Klo = klo != 0 ? klo : throw new Exception();
-        Prop1 = aaa ?? throw new NullReferenceException();
-    }
-}
-";
-            var expectedText = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-internal enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-internal class Class3<T> where T : class
-{
-    public Class3(
-        AnEnum1 enumProp)
-    {
-        EnumProp = enumProp;
-        Klo = klo != 0 ? klo : throw new Exception();
-        Prop1 = aaa ?? throw new NullReferenceException();
-    }
-}
-";
-
-            CodeAction registeredAction = null;
-            var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(250, 0), a => registeredAction = a);
-            var sut = CreateSut();
-
-            // Act
-            await sut.ComputeRefactoringsAsync(context);
-            Assert.IsNotNull(registeredAction);
-
-            var changedDocument = await ApplyRefactoring(document, registeredAction);
-            var changedText = (await changedDocument.GetTextAsync()).ToString();
-
-            // Assert
-            Assert.AreEqual(expectedText, changedText);
-        }
-
-        [TestMethod]
-        public async Task SingleLineParameterList_WithParameterModifiers_IsConvertedToMultilineParameterList()
-        {
-            // Arrange
-            var testString = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-internal enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-internal class Class3<T> where T : class
-{
-    public int Act(ref int a, out int b, int c)
-    {
-        b = 20;
-        return a;
-    }
-
-    public Class3(AnEnum1 enumProp)
-    {
-        EnumProp = enumProp;
-        Klo = klo != 0 ? klo : throw new Exception();
-        Prop1 = aaa ?? throw new NullReferenceException();
-    }
-}
-";
-            var expectedText = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-internal enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-internal class Class3<T> where T : class
-{
-    public int Act(
-        ref int a,
-        out int b,
-        int c)
-    {
-        b = 20;
-        return a;
-    }
-
-    public Class3(AnEnum1 enumProp)
-    {
-        EnumProp = enumProp;
-        Klo = klo != 0 ? klo : throw new Exception();
-        Prop1 = aaa ?? throw new NullReferenceException();
-    }
-}
-";
-
-            CodeAction registeredAction = null;
-            var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(244, 0), a => registeredAction = a);
-            var sut = CreateSut();
-
-            // Act
-            await sut.ComputeRefactoringsAsync(context);
-            Assert.IsNotNull(registeredAction);
-
-            var changedDocument = await ApplyRefactoring(document, registeredAction);
-            var changedText = (await changedDocument.GetTextAsync()).ToString();
-
-            // Assert
-            Assert.AreEqual(expectedText, changedText);
-        }
-
-        [TestMethod]
-        public async Task MultilineParameterList_IsConvertedToSingleLineParameterList()
-        {
-            // Arrange
-            var testString = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-internal enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-internal class Class3<T> where T : class
-{
-    public Class3(
-        AnEnum1 enumProp,
-        int klo,
-        T aaa)
-    {
         EnumProp = enumProp;
         Klo = klo != 0 ? klo : throw new Exception();
         Prop1 = aaa ?? throw new NullReferenceException();
@@ -314,6 +265,8 @@ internal class Class3<T> where T : class
 {
     public Class3(AnEnum1 enumProp, int klo, T aaa)
     {
+        Something(enumProp, ref klo, aaa);
+
         EnumProp = enumProp;
         Klo = klo != 0 ? klo : throw new Exception();
         Prop1 = aaa ?? throw new NullReferenceException();
@@ -323,7 +276,7 @@ internal class Class3<T> where T : class
 
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(262, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(320, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act
@@ -338,7 +291,7 @@ internal class Class3<T> where T : class
         }
 
         [TestMethod]
-        public async Task MultilineParameterList_IsConvertedToSingleLineParameterList2()
+        public async Task MultilineArgumentList_IsConvertedToSingleLineArgumentList1()
         {
             // Arrange
             var testString = @"
@@ -355,9 +308,11 @@ internal enum AnEnum1
 
 internal class Class3<T> where T : class
 {
-    public Class3(
-        AnEnum1 enumProp)
+    public Class3(AnEnum1 enumProp)
     {
+        OtherThing(
+            enumProp);
+
         EnumProp = enumProp;
         Klo = klo != 0 ? klo : throw new Exception();
         Prop1 = aaa ?? throw new NullReferenceException();
@@ -381,6 +336,8 @@ internal class Class3<T> where T : class
 {
     public Class3(AnEnum1 enumProp)
     {
+        OtherThing(enumProp);
+
         EnumProp = enumProp;
         Klo = klo != 0 ? klo : throw new Exception();
         Prop1 = aaa ?? throw new NullReferenceException();
@@ -390,7 +347,7 @@ internal class Class3<T> where T : class
 
             CodeAction registeredAction = null;
             var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(260, 0), a => registeredAction = a);
+            var context = CreateRefactoringContext(document, new TextSpan(302, 0), a => registeredAction = a);
             var sut = CreateSut();
 
             // Act
@@ -403,87 +360,6 @@ internal class Class3<T> where T : class
             // Assert
             Assert.AreEqual(expectedText, changedText);
         }
-
-        [TestMethod]
-        public async Task MultilineParameterList_WithParameterModifiers_IsConvertedToSingleLineParameterList()
-        {
-            // Arrange
-            var testString = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-internal enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-internal class Class3<T> where T : class
-{
-    public int Act(
-        ref int a,
-        out int b,
-        int c)
-    {
-        b = 20;
-        return a;
-    }
-
-    public Class3(AnEnum1 enumProp)
-    {
-        EnumProp = enumProp;
-        Klo = klo != 0 ? klo : throw new Exception();
-        Prop1 = aaa ?? throw new NullReferenceException();
-    }
-}
-";
-
-            var expectedText = @"
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-internal enum AnEnum1
-{
-    FirstThing,
-    SecondThing = 2
-}
-
-internal class Class3<T> where T : class
-{
-    public int Act(ref int a, out int b, int c)
-    {
-        b = 20;
-        return a;
-    }
-
-    public Class3(AnEnum1 enumProp)
-    {
-        EnumProp = enumProp;
-        Klo = klo != 0 ? klo : throw new Exception();
-        Prop1 = aaa ?? throw new NullReferenceException();
-    }
-}
-";
-            CodeAction registeredAction = null;
-            var document = CreateDocument(testString);
-            var context = CreateRefactoringContext(document, new TextSpan(274, 0), a => registeredAction = a);
-            var sut = CreateSut();
-
-            // Act
-            await sut.ComputeRefactoringsAsync(context);
-            Assert.IsNotNull(registeredAction);
-
-            var changedDocument = await ApplyRefactoring(document, registeredAction);
-            var changedText = (await changedDocument.GetTextAsync()).ToString();
-
-            // Assert
-            Assert.AreEqual(expectedText, changedText);
-        }
-
 
         public async Task<Document> ApplyRefactoring(Document originalDocument, CodeAction codeAction)
         {
@@ -512,7 +388,7 @@ internal class Class3<T> where T : class
                     registerRefactoring,
                     default(CancellationToken));
 
-        private RefactorClasses.ParameterListRefactoring.RefactoringProvider CreateSut() =>
-            new RefactorClasses.ParameterListRefactoring.RefactoringProvider();
+        private RefactorClasses.ArgumentListRefactoring.RefactoringProvider CreateSut() =>
+            new RefactorClasses.ArgumentListRefactoring.RefactoringProvider();
     }
 }

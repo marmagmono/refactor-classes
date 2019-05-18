@@ -150,8 +150,8 @@ namespace RefactorClasses.GenerateWithFromProperties
                 else
                 {
                     withMethodExpression = withMethodExpression
-                    .NormalizeWhitespace(elasticTrivia: false)
-                    .WithTriviaFrom(previousWith);
+                        .NormalizeWhitespace(elasticTrivia: false)
+                        .WithTriviaFrom(previousWith);
 
                     newClassDeclaration = newClassDeclaration.ReplaceNode(previousWith, withMethodExpression);
                 }

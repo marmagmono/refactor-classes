@@ -295,7 +295,6 @@ public class Class2<T>
         private RefactorClasses.GenerateToStringFromProperties.RefactoringProvider CreateSut() =>
             new RefactorClasses.GenerateToStringFromProperties.RefactoringProvider();
 
-
         private CodeRefactoringContext CreateRefactoringContext(
             Document document,
             TextSpan textSpan,

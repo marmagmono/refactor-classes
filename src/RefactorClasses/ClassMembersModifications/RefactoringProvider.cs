@@ -72,9 +72,6 @@ namespace RefactorClasses.ClassMembersModifications
                     }
 
                     break;
-
-                default:
-                    break;
             }
 
             void HandleCandidate(

@@ -211,7 +211,7 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
 
                     var createObjectCall = EGH.CreateObject(
                         SF.IdentifierName(generatedClassName),
-                        node.ParameterList.Parameters.Select(ToArgument).ToArray());
+                        node.ParameterList.ToArgumentArray());
 
                     return node
                         .WithBody(null)
@@ -222,9 +222,6 @@ namespace RefactorClasses.GenerateDiscriminatedUnion
 
                 return base.VisitMethodDeclaration(node);
             }
-
-            private static ArgumentSyntax ToArgument(ParameterSyntax parameter) =>
-                SH.ArgumentFromIdentifier(parameter.Identifier);
         }
 
         private class ClassOccurencesCleaner : CSharpSyntaxRewriter

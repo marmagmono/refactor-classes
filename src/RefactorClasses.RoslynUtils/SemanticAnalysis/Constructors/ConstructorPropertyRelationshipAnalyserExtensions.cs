@@ -1,10 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using RefactorClasses.RoslynUtils.Utils;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
 
 namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
 {

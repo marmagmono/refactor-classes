@@ -2,23 +2,18 @@
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
 using RefactorClasses.CodeActions;
 using RefactorClasses.CodeRefactoringUtils;
 using RefactorClasses.RoslynUtils.DeclarationAnalysis;
 using RefactorClasses.RoslynUtils.DeclarationGeneration;
-using System;
-using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace RefactorClasses.ParameterListRefactoring
 {
     using SF = SyntaxFactory;
-    using SH = SyntaxHelpers;
 
     [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "ParameterListRefactroing"), Shared]
     public class RefactoringProvider : CodeRefactoringProvider

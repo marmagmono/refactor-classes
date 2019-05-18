@@ -6,7 +6,6 @@ using System.Text;
 
 namespace RefactorClasses.RoslynUtils.SemanticAnalysis.Constructors
 {
-
     /// <summary>
     /// <see cref="ConstructorPropertyRelationshipAnalyser"/> helps in building a model 
     /// which can answer questions about which property or field is set in constructor and how.

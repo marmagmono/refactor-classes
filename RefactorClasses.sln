@@ -1,15 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses", "src\RefactorClasses\RefactorClasses.csproj", "{13B3803A-C7F7-46BD-AC53-E163181E05F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RefactorClasses", "src\RefactorClasses\RefactorClasses.csproj", "{13B3803A-C7F7-46BD-AC53-E163181E05F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.Test", "src\RefactorClasses.Test\RefactorClasses.Test.csproj", "{53F956A7-E075-446E-92E4-5A5B1641D511}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RefactorClasses.Test", "src\RefactorClasses.Test\RefactorClasses.Test.csproj", "{53F956A7-E075-446E-92E4-5A5B1641D511}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.Vsix", "src\RefactorClasses.Vsix\RefactorClasses.Vsix.csproj", "{701DE3F8-4830-44C1-BECF-CACB3226FC14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.RoslynUtils", "src\RefactorClasses.RoslynUtils\RefactorClasses.RoslynUtils.csproj", "{702C29BB-4433-4FFB-8BFC-34A3384EC88C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RefactorClasses.RoslynUtils", "src\RefactorClasses.RoslynUtils\RefactorClasses.RoslynUtils.csproj", "{702C29BB-4433-4FFB-8BFC-34A3384EC88C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.Analysis", "RefactorClasses.Analysis\RefactorClasses.Analysis.csproj", "{B377440B-73C8-464A-B553-F2FC2FF5F9D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.Analysis.Test", "RefactorClasses.Analysis.Test\RefactorClasses.Analysis.Test.csproj", "{62D5A70C-5046-4CA9-9409-253DACA4F059}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +37,14 @@ Global
 		{702C29BB-4433-4FFB-8BFC-34A3384EC88C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{702C29BB-4433-4FFB-8BFC-34A3384EC88C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{702C29BB-4433-4FFB-8BFC-34A3384EC88C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B377440B-73C8-464A-B553-F2FC2FF5F9D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B377440B-73C8-464A-B553-F2FC2FF5F9D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B377440B-73C8-464A-B553-F2FC2FF5F9D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B377440B-73C8-464A-B553-F2FC2FF5F9D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62D5A70C-5046-4CA9-9409-253DACA4F059}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62D5A70C-5046-4CA9-9409-253DACA4F059}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62D5A70C-5046-4CA9-9409-253DACA4F059}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62D5A70C-5046-4CA9-9409-253DACA4F059}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace RefactorClasses.Analysis.DeclarationGeneration
+namespace RefactorClasses.Analysis.Syntax
 {
     public static class Types
     {

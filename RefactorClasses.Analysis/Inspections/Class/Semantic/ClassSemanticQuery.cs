@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -23,6 +24,37 @@ namespace RefactorClasses.Analysis.Inspections.Class.Semantic
         {
             this.model = model;
             this.inspector = inspector;
+        }
+
+        public bool TryFindFirstAttributeMatching(
+            string attributeClassName,
+            out AttributeData attributeSymbol,
+            string attributeNamespace = "")
+        {
+            attributeSymbol = null;
+
+            var classSymbol = this.model.GetDeclaredSymbol(this.inspector.Syntax);
+            if (classSymbol == null)
+            {
+                return false;
+            }
+
+            var firstMatchingAttribute = classSymbol
+                .GetAttributes()
+                .Where(ad =>
+                    ad.AttributeClass.Name == attributeClassName
+                    && (string.IsNullOrEmpty(attributeNamespace)
+                        || ad.AttributeClass.ContainingNamespace.Name == attributeNamespace))
+                .FirstOrDefault();
+
+            if (firstMatchingAttribute != null)
+            {
+                attributeSymbol = firstMatchingAttribute;
+                return true;
+            }
+
+            attributeSymbol = null;
+            return false;
         }
 
         // TODO: Find fields / properties assigned in constructor ?

@@ -39,7 +39,8 @@ namespace RefactorClasses.Analysis.Inspections.Method
             return new TestFlow(test(pInspectors));
         }
 
-        public IEnumerable<ParameterSyntax> Parameters => this.syntax.ParameterList.Parameters;
+        public IEnumerable<ParameterInspector> Parameters =>
+            this.syntax.ParameterList.Parameters.Select(p => new ParameterInspector(p));
 
         public BaseMethodDeclarationSyntax Syntax => this.syntax;
 

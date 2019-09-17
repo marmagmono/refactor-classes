@@ -72,6 +72,7 @@ namespace RefactorClasses.Analysis.Inspections.Method.Semantic
             AssignmentExpressionSyntax assignmentSyntax)
         {
             // TODO: tuples
+            // TODO: not only throws ?
             // = parameter;
 
             // = parameter ?? throw ();

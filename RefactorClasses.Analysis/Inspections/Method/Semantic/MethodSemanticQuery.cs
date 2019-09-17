@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace RefactorClasses.Analysis.Inspections.Method.Semantic
 {
@@ -17,11 +18,17 @@ namespace RefactorClasses.Analysis.Inspections.Method.Semantic
             this.inspector = inspector;
         }
 
+        public SymbolInfo GetReturnType()
+        {
+            var methodSyntax = (MethodDeclarationSyntax)this.inspector.Syntax;
+            return this.model.GetSymbolInfo(methodSyntax.ReturnType);
+        }
+
         public AssignmentsResult FindAssignments()
         {
             var parameterSymbols =
                 this.inspector.Parameters
-                    .Select(ps => (IParameterSymbol)model.GetDeclaredSymbol(ps))
+                    .Select(ps => (IParameterSymbol)model.GetDeclaredSymbol(ps.Syntax))
                     .ToList();
 
             var finder = new ParametersAssignmentsFinder(parameterSymbols, this.model);

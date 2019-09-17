@@ -103,7 +103,7 @@ namespace RefactorClasses.Analysis.Test
         }
 
         [Fact]
-        public async Task Given_MethodWithConditionalVariableAssignment_Then_AssignmentIsFound()
+        public async Task Given_MethodWithConditionalVariableAssignmentWithThrow_Then_AssignmentIsFound()
         {
             // Arrange
             var text = @"
@@ -116,7 +116,7 @@ namespace RefactorClasses.Analysis.Test
         public void MyMethod(int a, int b)
         {
             int u = 0;
-            u = a == 10 ? b : 0;
+            u = a == 10 ? b : throw new ArgumentException();
         }
     }
 }";
@@ -142,7 +142,7 @@ namespace RefactorClasses.Analysis.Test
         }
 
         [Fact]
-        public async Task Given_MethodWithConditionalVariableAssignment_ParameterOnSecondPosition_Then_AssignmentIsFound()
+        public async Task Given_MethodWithConditionalVariableAssignmentWithThrow_ParameterOnSecondPosition_Then_AssignmentIsFound()
         {
             // Arrange
             var text = @"
@@ -155,7 +155,7 @@ namespace RefactorClasses.Analysis.Test
         public void MyMethod(int a, int b)
         {
             int u = 0;
-            u = a == 10 ? 0 : b;
+            u = a == 10 ? throw new ArgumentException() : b;
         }
     }
 }";
@@ -181,7 +181,7 @@ namespace RefactorClasses.Analysis.Test
         }
 
         [Fact]
-        public async Task Given_MethodWithCoalescingAssignment_Then_AssignmentIsFound()
+        public async Task Given_MethodWithCoalescingAssignmentWithThrow_Then_AssignmentIsFound()
         {
             // Arrange
             var text = @"

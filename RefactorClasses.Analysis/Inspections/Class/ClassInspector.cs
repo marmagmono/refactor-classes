@@ -59,6 +59,7 @@ namespace RefactorClasses.Analysis.Inspections.Class
                 .Select(m => new MethodInspector(m))
                 .Where(test);
         }
+
         public TestFlow CheckProperties(Func<IEnumerable<PropertyInspector>, bool> test)
         {
             var ci = GetMembers<PropertyDeclarationSyntax>().Select(m => new PropertyInspector(m));
@@ -70,6 +71,20 @@ namespace RefactorClasses.Analysis.Inspections.Class
             return GetMembers<PropertyDeclarationSyntax>()
                 .Select(m => new PropertyInspector(m))
                 .Where(test);
+        }
+
+        public TestFlow CheckAttributes(Func<IEnumerable<AttributeSyntax>, bool> test)
+        {
+            var attributes =
+                this.syntax.AttributeLists.SelectMany(al => al.Attributes);
+            return new TestFlow(test(attributes));
+        }
+
+        public IEnumerable<AttributeSyntax> FindMatchingAttributes(Func<AttributeSyntax, bool> test)
+        {
+            return this.syntax.AttributeLists
+                .SelectMany(al => al.Attributes)
+                .Where(a => test(a));
         }
 
         public ClassSemanticQuery CreateSemanticQuery(SemanticModel model) => new ClassSemanticQuery(model, this);
@@ -85,6 +100,8 @@ namespace RefactorClasses.Analysis.Inspections.Class
         // type
 
         public IdentifierNameSyntax Identifier => SF.IdentifierName(syntax.Identifier.WithoutTrivia());
+
+        public ClassDeclarationSyntax Syntax => this.syntax;
 
         private IEnumerable<TMember> GetMembers<TMember>() =>
             this.syntax.Members

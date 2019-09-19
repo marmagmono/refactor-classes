@@ -32,7 +32,7 @@ namespace RefactorClasses.Analysis.Generators
 
         public RecordBuilder AddProperty(TypeSyntax type, string identifier)
         {
-            this.properties.Add(new PropertyInfo(type, identifier));
+            this.properties.Add(new PropertyInfo(type.WithoutTrivia(), identifier));
             return this;
         }
 
@@ -40,7 +40,7 @@ namespace RefactorClasses.Analysis.Generators
         {
             foreach (var (t, id) in properties)
             {
-                AddProperty(t, id);
+                AddProperty(t, GeneratorHelper.UppercaseFirstLetter(id));
             }
 
             return this;
@@ -57,11 +57,16 @@ namespace RefactorClasses.Analysis.Generators
 
             // TODO: rething trivia usage everywhere ?
             // TODO: switch between windows / linux EOL
+            // TODO: Build properties with getter and uppercase name if needed
+            // TODO: Allow choosing between this.property vs no this
             var generatedProperties = this.properties.Select(
                 p =>
-                    SF.PropertyDeclaration(p.Type, p.Identifier)
-                    .WithSemicolonToken(Tokens.Semicolon)
-                    .WithTrailingTrivia(SF.ElasticCarriageReturnLineFeed))
+                {
+                    return new PropertyBuilder(p.Type, p.Identifier)
+                        .AddModifiers(Modifiers.Public)
+                        .AsReadonlyGet()
+                        .Build();
+                })
                 .ToList();
 
             // Constructor
@@ -79,17 +84,21 @@ namespace RefactorClasses.Analysis.Generators
 
             var generatedConstructor = new MethodBuilder(identifier)
                 .Modifiers(Modifiers.Public)
-                .Parameters()
+                .Parameters(parameters.ToArray())
                 .Body(SF.Block(body))
                 .BuildConstructor();
 
             // Create actual declaration
-            var members = new List<MemberDeclarationSyntax>(generatedProperties);
+            var members = generatedProperties
+                .Select(p => p.WithSemicolonToken(Tokens.Semicolon))
+                .Cast<MemberDeclarationSyntax>()
+                .ToList();
+
             members.Add(generatedConstructor);
 
             return SF.ClassDeclaration(
                 GeneratorHelper.EmptyAttributeList(),
-                SF.TokenList(modifiers),
+                SF.TokenList(this.modifiers),
                 identifier,
                 default(TypeParameterListSyntax),
                 default(BaseListSyntax),

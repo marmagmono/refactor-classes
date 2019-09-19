@@ -144,7 +144,7 @@ namespace RefactorClasses.Analysis.Test
                             .Select(p => (p.Type, p.Name)).ToArray())
                     .Build();
 
-                var rs = record.ToFullString();
+                var rs = record.ToString();
 
                 int a = 10;
             }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -28,6 +29,9 @@ namespace RefactorClasses.Analysis.Generators
 
         public static SyntaxToken Identifier(string name) => SF.Identifier(name);
 
+        public static SyntaxList<T> List<T>(T node) where T : SyntaxNode =>
+            SF.List<T>(Enumerable.Repeat(node, 1));
+
         public static SyntaxList<AttributeListSyntax> EmptyAttributeList() =>
             SF.List<AttributeListSyntax>();
 
@@ -36,6 +40,18 @@ namespace RefactorClasses.Analysis.Generators
 
         public static SyntaxTokenList EmptyModifierList() =>
             SF.TokenList();
+
+        public static string UppercaseFirstLetter(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return string.Empty;
+            }
+
+            char[] a = s.ToCharArray();
+            a[0] = char.ToUpper(a[0]);
+            return new string(a);
+        }
 
         public static SyntaxToken LowercaseIdentifierFirstLetter(SyntaxToken identifier)
         {

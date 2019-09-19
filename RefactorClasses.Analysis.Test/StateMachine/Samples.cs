@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using RefactorClasses.Analysis.DeclarationGeneration;
 using RefactorClasses.Analysis.Generators;
@@ -70,6 +71,7 @@ namespace RefactorClasses.Analysis.Test
             // Arrange
             var text = @"
 using System;
+using System.Threading.Tasks;
 
 namespace RefactorClasses.Analysis.Test
 {
@@ -80,6 +82,11 @@ namespace RefactorClasses.Analysis.Test
             int a,
             Test1 testClass, string fdeee)
         {
+        }
+
+        public async Task<int> TaskMethodReturningSomething(int a, float b)
+        {
+            return 10;
         }
 
         public System.Threading.Tasks.Task AsyncOperationsSupport(int a, float b)
@@ -100,11 +107,6 @@ namespace RefactorClasses.Analysis.Test
         public async Task TaskMethodWithTuples((int, float) a, float[] b)
         {
             return;
-        }
-
-        public async Task<int> TaskMethodReturningSomething(int a, float b)
-        {
-            return 10;
         }
 
         private void PrintSomething() {}
@@ -136,6 +138,10 @@ namespace RefactorClasses.Analysis.Test
 
             foreach (var method in methods)
             {
+                var msq = method.CreateSemanticQuery(semanticModel);
+                var returnType = msq.GetReturnType();
+                bool isTaskReturn = IsTask(returnType.Symbol);
+
                 var parameters = method.Parameters.Select(par => par.Type).ToList();
                 var record = new RecordBuilder(method.Name)
                     .AddModifiers(Modifiers.Public)
@@ -143,6 +149,9 @@ namespace RefactorClasses.Analysis.Test
                         method.Parameters
                             .Select(p => (p.Type, p.Name)).ToArray())
                     .Build();
+
+                // TODO: if task is returned -> generate TaskCompletionSource
+                // and matching methods
 
                 var rs = record.ToString();
 
@@ -152,6 +161,18 @@ namespace RefactorClasses.Analysis.Test
             // Act
 
             // Assert
+
+            bool IsTask(ISymbol symbol)
+            {
+                var namedSymbol = symbol as INamedTypeSymbol;
+                if (namedSymbol == null)
+                {
+                    return false;
+                }
+
+                return namedSymbol.Name == "Task"
+                    && namedSymbol?.ContainingNamespace?.ToString() == "System.Threading.Tasks";
+            }
         }
     }
 }

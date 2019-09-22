@@ -28,5 +28,8 @@ namespace RefactorClasses.Analysis.Syntax
 
         public static TypeSyntax String =>
             SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword));
+
+        public static TypeSyntax Bool =>
+            SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword));
     }
 }

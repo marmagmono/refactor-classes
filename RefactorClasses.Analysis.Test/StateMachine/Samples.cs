@@ -9,6 +9,7 @@ using RefactorClasses.Analysis.DeclarationGeneration;
 using RefactorClasses.Analysis.Generators;
 using RefactorClasses.Analysis.Inspections.Class;
 using RefactorClasses.Analysis.Inspections.Method;
+using RefactorClasses.Analysis.Syntax;
 using Xunit;
 
 namespace RefactorClasses.Analysis.Test.StateMachine
@@ -150,7 +151,7 @@ namespace RefactorClasses.Analysis.Test
             {
                 var msq = method.CreateSemanticQuery(semanticModel);
                 var returnType = msq.GetReturnType();
-                bool isTaskReturn = IsTask(returnType.Symbol);
+                var isTaskReturn = IsTask(returnType.Symbol);
 
                 var parameters = method.Parameters.Select(par => par.Type).ToList();
 
@@ -161,14 +162,33 @@ namespace RefactorClasses.Analysis.Test
                     return;
                 }
 
-                // TODO: add base class
-                var record = new RecordBuilder(method.Name)
+                var recordBuilder = new RecordBuilder(method.Name)
                     .AddModifiers(Modifiers.Public)
                     .AddBaseTypes(GeneratorHelper.Identifier(triggerTypeName.Name))
                     .AddProperties(
                         method.Parameters
-                            .Select(p => (p.Type, p.Name)).ToArray())
-                    .Build();
+                            .Select(p => (p.Type, p.Name)).ToArray());
+
+                if (isTaskReturn.Value.IsTask())
+                {
+                    var boolTcs = GeneratorHelper.GenericName(
+                        "TaskCompletionSource",
+                        Types.Bool);
+
+                    var initializer = ExpressionGenerationHelper.CreateObject(boolTcs);
+                    recordBuilder.AddField(boolTcs, "result", initializer);
+                }
+                else if (isTaskReturn.Value.IsTypedTask(out var taskType))
+                {
+                    var typedTcs = GeneratorHelper.GenericName(
+                        "TaskCompletionSource",
+                        GeneratorHelper.Identifier(taskType.Name));
+
+                    var initializer = ExpressionGenerationHelper.CreateObject(typedTcs);
+                    recordBuilder.AddField(typedTcs, "result", initializer);
+                }
+
+                var record = recordBuilder.Build();
 
                 // TODO: if task is returned -> generate TaskCompletionSource
                 // and matching methods
@@ -182,17 +202,74 @@ namespace RefactorClasses.Analysis.Test
 
             // Assert
 
-            bool IsTask(ISymbol symbol)
+            IsTaskResult? IsTask(ISymbol symbol)
             {
                 var namedSymbol = symbol as INamedTypeSymbol;
                 if (namedSymbol == null)
                 {
-                    return false;
+                    return null;
                 }
 
-                return namedSymbol.Name == "Task"
-                    && namedSymbol?.ContainingNamespace?.ToString() == "System.Threading.Tasks";
+                if (namedSymbol.Name == "Task"
+                    && namedSymbol?.ContainingNamespace?.ToString() == "System.Threading.Tasks")
+                {
+                    var firstTypeArg = namedSymbol.TypeArguments.FirstOrDefault();
+                    if (firstTypeArg != null)
+                    {
+                        return IsTaskResult.TypedTask(firstTypeArg);
+                    }
+                    else
+                    {
+                        return IsTaskResult.Task();
+                    }
+                }
+
+                return IsTaskResult.NotATask();
             }
+
+            var tcs = new TaskCompletionSource<int>();
+        }
+
+        private readonly struct IsTaskResult
+        {
+            public static IsTaskResult NotATask() => new IsTaskResult(ResultType.NotATask);
+
+            public static IsTaskResult Task() => new IsTaskResult(ResultType.Task);
+
+            public static IsTaskResult TypedTask(ITypeSymbol taskType) => new IsTaskResult(
+                ResultType.TypedTask, taskType);
+
+            public bool IsNotATask() => this.resultType == ResultType.NotATask;
+
+            public bool IsTask() => this.resultType == ResultType.Task;
+
+            public bool IsTypedTask(out ITypeSymbol taskType)
+            {
+                if (this.resultType == ResultType.TypedTask)
+                {
+                    taskType = this.typeSymbol;
+                    return true;
+                }
+                else
+                {
+                    taskType = null;
+                    return false;
+                }
+            }
+
+            #region private
+            private enum ResultType { NotATask, Task, TypedTask }
+
+            private readonly ResultType resultType;
+
+            private readonly ITypeSymbol typeSymbol;
+
+            private IsTaskResult(ResultType resultType, ITypeSymbol typeSymbol = default)
+            {
+                this.resultType = resultType;
+                this.typeSymbol = typeSymbol;
+            }
+            #endregion
         }
     }
 }

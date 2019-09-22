@@ -31,6 +31,11 @@ namespace RefactorClasses.Analysis.Generators
 
         public static IdentifierNameSyntax Identifier(string name) => SF.IdentifierName(name);
 
+        public static GenericNameSyntax GenericName(string name, params TypeSyntax[] types) =>
+            SF.GenericName(
+                IdentifierToken(name),
+                SF.TypeArgumentList(SF.SeparatedList(types)));
+
         public static SyntaxList<T> List<T>(T node) where T : SyntaxNode =>
             SF.List<T>(Enumerable.Repeat(node, 1));
 

@@ -20,6 +20,7 @@ namespace RefactorClasses.Analysis.Generators
 
         private readonly List<TypeSyntax> baseTypes = new List<TypeSyntax>();
         private readonly List<PropertyInfo> properties = new List<PropertyInfo>();
+        private readonly List<FieldInfo> fields = new List<FieldInfo>();
 
         public RecordBuilder(string recordName)
         {
@@ -45,6 +46,15 @@ namespace RefactorClasses.Analysis.Generators
                 AddProperty(t, GeneratorHelper.UppercaseFirstLetter(id));
             }
 
+            return this;
+        }
+
+        public RecordBuilder AddField(
+            TypeSyntax type,
+            string identifier,
+            ObjectCreationExpressionSyntax initializer)
+        {
+            this.fields.Add(new FieldInfo(type, identifier, initializer));
             return this;
         }
 
@@ -85,24 +95,34 @@ namespace RefactorClasses.Analysis.Generators
                     p.Type,
                     GeneratorHelper.LowercaseIdentifierFirstLetter(p.Identifier)));
 
-            var body = generatedProperties.Select(prop =>
-                SF.ExpressionStatement(
-                    ExpressionGenerationHelper.SimpleAssignment(
-                        prop.Identifier,
-                        GeneratorHelper.LowercaseIdentifierFirstLetter(prop.Identifier)))
-            );
+            var members = new List<MemberDeclarationSyntax>();
+            var bodyBuilder = new BodyBuilder();
+
+            foreach (var f in this.fields)
+            {
+                members.Add(new FieldBuilder(f.Type)
+                    .AddVariables(f.Identifier)
+                    .Build());
+
+                bodyBuilder.AddAssignment(
+                    GeneratorHelper.Identifier(f.Identifier),
+                    f.Initializer);
+            }
+
+            foreach (var p in generatedProperties)
+            {
+                members.Add(p);
+
+                bodyBuilder.AddAssignment(
+                    p.Identifier,
+                    GeneratorHelper.LowercaseIdentifierFirstLetter(p.Identifier));
+            }
 
             var generatedConstructor = new MethodBuilder(identifier)
                 .Modifiers(Modifiers.Public)
                 .Parameters(parameters.ToArray())
-                .Body(SF.Block(body))
+                .Body(SF.Block(bodyBuilder.Build()))
                 .BuildConstructor();
-
-            // Create actual declaration
-            var members = generatedProperties
-                .Select(p => p.WithSemicolonToken(Tokens.Semicolon))
-                .Cast<MemberDeclarationSyntax>()
-                .ToList();
 
             members.Add(generatedConstructor);
 
@@ -126,6 +146,22 @@ namespace RefactorClasses.Analysis.Generators
             {
                 Type = type;
                 Identifier = identifier;
+            }
+        }
+
+        private class FieldInfo
+        {
+            public TypeSyntax Type { get; }
+
+            public string Identifier { get; }
+
+            public ObjectCreationExpressionSyntax Initializer { get; }
+
+            public FieldInfo(TypeSyntax type, string identifier, ObjectCreationExpressionSyntax initializer)
+            {
+                Type = type;
+                Identifier = identifier;
+                Initializer = initializer;
             }
         }
     }

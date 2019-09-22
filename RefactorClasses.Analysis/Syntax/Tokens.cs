@@ -9,6 +9,8 @@ namespace RefactorClasses.Analysis.DeclarationGeneration
 
         public static SyntaxToken Semicolon => SyntaxFactory.Token(SyntaxKind.SemicolonToken);
 
+        public static SyntaxToken Colon => SyntaxFactory.Token(SyntaxKind.ColonToken);
+
         public static SyntaxToken Comma => SyntaxFactory.Token(SyntaxKind.CommaToken);
 
         public static SyntaxToken OpenParen => SyntaxFactory.Token(SyntaxKind.OpenParenToken);

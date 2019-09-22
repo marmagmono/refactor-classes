@@ -11,7 +11,7 @@ namespace RefactorClasses.Analysis.Generators
 
     public sealed class PropertyBuilder
     {
-        private enum PropertyType
+        public enum PropertyType
         {
             ReadonlyGet,
         }
@@ -33,13 +33,7 @@ namespace RefactorClasses.Analysis.Generators
             return this;
         }
 
-        public PropertyBuilder AsReadonlyGet()
-        {
-            this.propertyType = PropertyType.ReadonlyGet;
-            return this;
-        }
-
-        public PropertyDeclarationSyntax Build()
+        public PropertyDeclarationSyntax Build(PropertyType propertyType = PropertyType.ReadonlyGet)
         {
             if (this.propertyType == PropertyType.ReadonlyGet)
             {
@@ -48,7 +42,7 @@ namespace RefactorClasses.Analysis.Generators
                     SF.TokenList(this.modifiers),
                     this.type,
                     default(ExplicitInterfaceSpecifierSyntax),
-                    GeneratorHelper.Identifier(this.identifier),
+                    GeneratorHelper.IdentifierToken(this.identifier),
                     SF.AccessorList(
                         GeneratorHelper.List(
                             SF.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration))),

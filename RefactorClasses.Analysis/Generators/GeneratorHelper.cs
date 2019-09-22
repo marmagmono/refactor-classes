@@ -17,7 +17,7 @@ namespace RefactorClasses.Analysis.Generators
                 SF.Token(SyntaxKind.CloseParenToken));
 
         public static ParameterSyntax Parameter(TypeSyntax type, string identifier) =>
-            Parameter(type, Identifier(identifier));
+            Parameter(type, IdentifierToken(identifier));
 
         public static ParameterSyntax Parameter(TypeSyntax type, SyntaxToken identifier) =>
             SF.Parameter(
@@ -27,7 +27,9 @@ namespace RefactorClasses.Analysis.Generators
                 identifier,
                 default(EqualsValueClauseSyntax));
 
-        public static SyntaxToken Identifier(string name) => SF.Identifier(name);
+        public static SyntaxToken IdentifierToken(string name) => SF.Identifier(name);
+
+        public static IdentifierNameSyntax Identifier(string name) => SF.IdentifierName(name);
 
         public static SyntaxList<T> List<T>(T node) where T : SyntaxNode =>
             SF.List<T>(Enumerable.Repeat(node, 1));

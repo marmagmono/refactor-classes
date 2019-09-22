@@ -17,6 +17,8 @@ namespace RefactorClasses.Analysis.Generators
     {
         private readonly string recordName;
         private readonly List<SyntaxToken> modifiers = new List<SyntaxToken>();
+
+        private readonly List<TypeSyntax> baseTypes = new List<TypeSyntax>();
         private readonly List<PropertyInfo> properties = new List<PropertyInfo>();
 
         public RecordBuilder(string recordName)
@@ -46,6 +48,12 @@ namespace RefactorClasses.Analysis.Generators
             return this;
         }
 
+        public RecordBuilder AddBaseTypes(params TypeSyntax[] baseTypes)
+        {
+            this.baseTypes.AddRange(baseTypes);
+            return this;
+        }
+
         public ClassDeclarationSyntax Build()
         {
             var identifier = SF.Identifier(recordName);
@@ -55,18 +63,20 @@ namespace RefactorClasses.Analysis.Generators
                 modifiers.Add(Modifiers.Sealed);
             }
 
+            // base types -> markers
+            var baseList = this.baseTypes.Count == 0 ?
+                default(BaseListSyntax)
+                : SF.BaseList(Tokens.Colon,
+                    SF.SeparatedList(this.baseTypes.Select(t => SF.SimpleBaseType(t) as BaseTypeSyntax)));
+
             // TODO: rething trivia usage everywhere ?
             // TODO: switch between windows / linux EOL
             // TODO: Build properties with getter and uppercase name if needed
             // TODO: Allow choosing between this.property vs no this
             var generatedProperties = this.properties.Select(
-                p =>
-                {
-                    return new PropertyBuilder(p.Type, p.Identifier)
+                p => new PropertyBuilder(p.Type, p.Identifier)
                         .AddModifiers(Modifiers.Public)
-                        .AsReadonlyGet()
-                        .Build();
-                })
+                        .Build(PropertyBuilder.PropertyType.ReadonlyGet))
                 .ToList();
 
             // Constructor
@@ -76,7 +86,7 @@ namespace RefactorClasses.Analysis.Generators
                     GeneratorHelper.LowercaseIdentifierFirstLetter(p.Identifier)));
 
             var body = generatedProperties.Select(prop =>
-                SyntaxFactory.ExpressionStatement(
+                SF.ExpressionStatement(
                     ExpressionGenerationHelper.SimpleAssignment(
                         prop.Identifier,
                         GeneratorHelper.LowercaseIdentifierFirstLetter(prop.Identifier)))
@@ -101,7 +111,7 @@ namespace RefactorClasses.Analysis.Generators
                 SF.TokenList(this.modifiers),
                 identifier,
                 default(TypeParameterListSyntax),
-                default(BaseListSyntax),
+                baseList,
                 GeneratorHelper.EmptyParameterConstraintList(),
                 SF.List(members));
         }

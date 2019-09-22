@@ -133,6 +133,16 @@ namespace RefactorClasses.Analysis.Test
             var classInspector = new ClassInspector(classDeclaration);
             var semanticInspector = classInspector.CreateSemanticQuery(semanticModel);
 
+            bool foundAttribute = semanticInspector.TryFindFirstAttributeMatching(
+                "StateMachineAttribute", out var atData);
+            var triggerType = atData
+                ?.NamedArguments
+                .FirstOrDefault(kvp => kvp.Key.Equals("TriggerType"));
+            if (triggerType == null)
+            {
+                return;
+            }
+
             var methods = classInspector.FindMatchingMethods(
                 mi => mi.Check(m => m.IsPublic() && !m.IsStatic()).Passed);
 
@@ -143,8 +153,18 @@ namespace RefactorClasses.Analysis.Test
                 bool isTaskReturn = IsTask(returnType.Symbol);
 
                 var parameters = method.Parameters.Select(par => par.Type).ToList();
+
+                // TODO: will throw if array
+                var triggerTypeName = triggerType.Value.Value.Value as INamedTypeSymbol;
+                if (triggerTypeName == null)
+                {
+                    return;
+                }
+
+                // TODO: add base class
                 var record = new RecordBuilder(method.Name)
                     .AddModifiers(Modifiers.Public)
+                    .AddBaseTypes(GeneratorHelper.Identifier(triggerTypeName.Name))
                     .AddProperties(
                         method.Parameters
                             .Select(p => (p.Type, p.Name)).ToArray())

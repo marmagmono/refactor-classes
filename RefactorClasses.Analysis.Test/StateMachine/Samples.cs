@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.FindSymbols;
 using RefactorClasses.Analysis.DeclarationGeneration;
 using RefactorClasses.Analysis.Generators;
 using RefactorClasses.Analysis.Inspections.Class;
@@ -267,6 +268,34 @@ namespace RefactorClasses.Analysis.Test
 
             //var tcs = new TaskCompletionSource<int>();
             //tcs.TrySetException()
+        }
+
+        [Fact]
+        public async Task Test3()
+        {
+            // Arrange
+            var text = @"
+using System;
+using System.Threading.Tasks;
+
+namespace RefactorClasses.Analysis.Test
+{
+    internal class SomethingBase { }
+
+    internal class SomethingInheriting : SomethingBase { }
+
+    internal class OtherThingInheriting : SomethingBase { }
+
+    internal class ThirdThingInheriting : SomethingBase { }
+}";
+
+            var tree = CSharpSyntaxTree.ParseText(text);
+            var compilation = TestHelpers.CreateCompilation(tree);
+            var semanticModel = compilation.GetSemanticModel(tree);
+            var classDeclaration = TestHelpers.FindFirstClassDeclaration(await tree.GetRootAsync());
+
+            var type = semanticModel.GetDeclaredSymbol(classDeclaration);
+            int a = 10;
         }
 
         private readonly struct IsTaskResult

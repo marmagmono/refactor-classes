@@ -41,6 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\RefactorClasses.Analysis\RefactorClasses.Analysis.csproj" />
     <ProjectReference Include="..\RefactorClasses.RoslynUtils\RefactorClasses.RoslynUtils.csproj" />
   </ItemGroup>
 

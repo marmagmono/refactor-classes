@@ -129,7 +129,7 @@ namespace RefactorClasses.Analysis.Generators
             var generatedConstructor = new MethodBuilder(identifier)
                 .Modifiers(Modifiers.Public)
                 .Parameters(parameters.ToArray())
-                .Body(SF.Block(bodyBuilder.Build()))
+                .Body(bodyBuilder.Build())
                 .BuildConstructor();
 
             members.Add(generatedConstructor);

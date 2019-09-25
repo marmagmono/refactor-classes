@@ -63,4 +63,12 @@ namespace RefactorClasses.Analysis.Test
     internal class ContextBase
     {
     }
+
+    internal class SomethingBase { }
+
+    internal class SomethingInheriting : SomethingBase { }
+
+    internal class OtherThingInheriting : SomethingBase { }
+
+    internal class ThirdThingInheriting : SomethingBase { }
 }

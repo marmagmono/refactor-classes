@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RefactorClasses.Analysis.DeclarationGeneration;
 
 namespace RefactorClasses.Analysis.Generators
 {
@@ -45,7 +46,8 @@ namespace RefactorClasses.Analysis.Generators
                     GeneratorHelper.IdentifierToken(this.identifier),
                     SF.AccessorList(
                         GeneratorHelper.List(
-                            SF.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration))),
+                            SF.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                            .WithSemicolonToken(Tokens.Semicolon))),
                     default(ArrowExpressionClauseSyntax),
                     default(EqualsValueClauseSyntax)
                     );

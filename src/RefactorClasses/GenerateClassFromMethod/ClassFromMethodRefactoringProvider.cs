@@ -82,6 +82,7 @@ namespace RefactorClasses.GenerateClassFromMethod
             }
             else if (isTaskReturn.IsTypedTask(out var typeSymbol))
             {
+                // TODO: name does not exactly works fo predefined types
                 AddTaskUtilities(recordBuilder, GH.Identifier(typeSymbol.Name));
             }
 
@@ -100,6 +101,7 @@ namespace RefactorClasses.GenerateClassFromMethod
             recordBuilder.AddField(tcs, "result", initializer);
 
             var resolveMethod = new MethodBuilder(GH.IdentifierToken("Resolve"))
+                        .Modifiers(Modifiers.Public)
                         .AddParameter(tcsType, GH.IdentifierToken("value"))
                         .Body(new BodyBuilder()
                             .AddVoidMemberInvocation(
@@ -110,6 +112,7 @@ namespace RefactorClasses.GenerateClassFromMethod
                         .Build();
 
             var cancelMethod = new MethodBuilder(GH.IdentifierToken("Cancel"))
+                .Modifiers(Modifiers.Public)
                 .Body(new BodyBuilder()
                     .AddVoidMemberInvocation(
                         GH.Identifier("result"),
@@ -118,6 +121,7 @@ namespace RefactorClasses.GenerateClassFromMethod
                 .Build();
 
             var rejectMethod = new MethodBuilder(GH.IdentifierToken("Reject"))
+                .Modifiers(Modifiers.Public)
                 .AddParameter(GH.Identifier("Exception"), GH.IdentifierToken("exc"))
                 .Body(new BodyBuilder()
                     .AddVoidMemberInvocation(

@@ -21,6 +21,7 @@ namespace RefactorClasses.Analysis.Generators
         private readonly List<TypeSyntax> baseTypes = new List<TypeSyntax>();
         private readonly List<PropertyInfo> properties = new List<PropertyInfo>();
         private readonly List<FieldInfo> fields = new List<FieldInfo>();
+        private readonly List<MethodDeclarationSyntax> methods = new List<MethodDeclarationSyntax>();
 
         public RecordBuilder(string recordName)
         {
@@ -55,6 +56,12 @@ namespace RefactorClasses.Analysis.Generators
             ObjectCreationExpressionSyntax initializer)
         {
             this.fields.Add(new FieldInfo(type, identifier, initializer));
+            return this;
+        }
+
+        public RecordBuilder AddMethod(MethodDeclarationSyntax methodDeclaration)
+        {
+            this.methods.Add(methodDeclaration);
             return this;
         }
 
@@ -102,9 +109,10 @@ namespace RefactorClasses.Analysis.Generators
             {
                 members.Add(new FieldBuilder(f.Type)
                     .AddVariables(f.Identifier)
+                    .Modifiers(Modifiers.Private, Modifiers.Readonly)
                     .Build());
 
-                bodyBuilder.AddAssignment(
+                bodyBuilder.AddFieldAssignment(
                     GeneratorHelper.Identifier(f.Identifier),
                     f.Initializer);
             }
@@ -125,6 +133,8 @@ namespace RefactorClasses.Analysis.Generators
                 .BuildConstructor();
 
             members.Add(generatedConstructor);
+
+            members.AddRange(this.methods);
 
             return SF.ClassDeclaration(
                 GeneratorHelper.EmptyAttributeList(),

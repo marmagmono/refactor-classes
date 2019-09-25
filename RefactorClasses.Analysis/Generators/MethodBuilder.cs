@@ -9,6 +9,9 @@ using RefactorClasses.Analysis.Syntax;
 
 namespace RefactorClasses.Analysis.Generators
 {
+    using SF = SyntaxFactory;
+    using GH = GeneratorHelper;
+
     public sealed class MethodBuilder
     {
         private SyntaxToken identifier;
@@ -34,6 +37,18 @@ namespace RefactorClasses.Analysis.Generators
         public MethodBuilder Modifiers(params SyntaxToken[] modifier)
         {
             modifiers.AddRange(modifier);
+            return this;
+        }
+
+        public MethodBuilder AddParameter(TypeSyntax typeSyntax, SyntaxToken identifier)
+        {
+            Parameters(
+                SyntaxFactory.Parameter(
+                    GH.EmptyAttributeList(),
+                    SF.TokenList(),
+                    typeSyntax,
+                    identifier,
+                    default(EqualsValueClauseSyntax)));
             return this;
         }
 

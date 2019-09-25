@@ -14,8 +14,13 @@ using Xunit;
 
 namespace RefactorClasses.Analysis.Test.StateMachine
 {
+    using SF = SyntaxFactory;
+    using GH = GeneratorHelper;
+    using EGH = ExpressionGenerationHelper;
+
     public class Samples
     {
+
         [Fact]
         public async Task Test1()
         {
@@ -177,6 +182,39 @@ namespace RefactorClasses.Analysis.Test
 
                     var initializer = ExpressionGenerationHelper.CreateObject(boolTcs);
                     recordBuilder.AddField(boolTcs, "result", initializer);
+
+                    var resolveMethod = new MethodBuilder(GH.IdentifierToken("Resolve"))
+                        .Body(new BodyBuilder()
+                            .AddVoidMemberInvocation(
+                                GH.Identifier("result"),
+                                GH.Identifier("TrySetResult"),
+                                SF.Argument(GH.Identifier("true")))
+                            .Build())
+                        .Build();
+
+                    var cancelMethod = new MethodBuilder(GH.IdentifierToken("Cancel"))
+                        .Body(new BodyBuilder()
+                            .AddVoidMemberInvocation(
+                                GH.Identifier("result"),
+                                GH.Identifier("TrySetCanceled"))
+                            .Build())
+                        .Build();
+
+                    var rejectMethod = new MethodBuilder(GH.IdentifierToken("Cancel"))
+                        .AddParameter(GH.Identifier("Exception"), GH.IdentifierToken("exc"))
+                        .Body(new BodyBuilder()
+                            .AddVoidMemberInvocation(
+                                GH.Identifier("result"),
+                                GH.Identifier("TrySetException"),
+                                SF.Argument(GH.Identifier("exc")))
+                            .Build())
+                        .Build();
+
+                    recordBuilder.AddMethod(resolveMethod);
+                    recordBuilder.AddMethod(cancelMethod);
+                    recordBuilder.AddMethod(rejectMethod);
+
+                    int ddddd = 0;
                 }
                 else if (isTaskReturn.Value.IsTypedTask(out var taskType))
                 {
@@ -227,7 +265,8 @@ namespace RefactorClasses.Analysis.Test
                 return IsTaskResult.NotATask();
             }
 
-            var tcs = new TaskCompletionSource<int>();
+            //var tcs = new TaskCompletionSource<int>();
+            //tcs.TrySetException()
         }
 
         private readonly struct IsTaskResult

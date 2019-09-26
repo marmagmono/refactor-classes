@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Composition;
+﻿using System.Composition;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -34,7 +31,7 @@ namespace RefactorClasses.GenerateClassFromMethod
 
             context.RegisterRefactoring(
                 new DelegateCodeAction(
-                    "Generate create method using constructor",
+                    "Generate command class from method",
                     (c) => GenerateClassFromMethod(document, methodDeclarationSyntax, c)));
 
             return;
@@ -71,7 +68,6 @@ namespace RefactorClasses.GenerateClassFromMethod
 
             var recordBuilder = new RecordBuilder($"{mi.Name}Command")
                     .AddModifiers(Modifiers.Public)
-                    //.AddBaseTypes(GeneratorHelper.Identifier(triggerTypeName.Name))
                     .AddProperties(
                         mi.Parameters
                             .Select(p => (p.Type, p.Name)).ToArray());
@@ -82,8 +78,9 @@ namespace RefactorClasses.GenerateClassFromMethod
             }
             else if (isTaskReturn.IsTypedTask(out var typeSymbol))
             {
-                // TODO: name does not exactly works fo predefined types
-                AddTaskUtilities(recordBuilder, GH.Identifier(typeSymbol.Name));
+                AddTaskUtilities(
+                    recordBuilder,
+                    GH.Identifier(SymbolSemanticQuery.GetName(typeSymbol)));
             }
 
             return recordBuilder.Build();

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace RefactorClasses.Analysis.Inspections.Type.Semantic
@@ -32,6 +29,11 @@ namespace RefactorClasses.Analysis.Inspections.Type.Semantic
 
             return IsTaskResult.NotATask();
         }
+
+        public static string GetName(ITypeSymbol symbol) =>
+            symbol.OriginalDefinition != null ?
+                symbol.OriginalDefinition.Name
+                : symbol.Name;
     }
 
     public readonly struct IsTaskResult

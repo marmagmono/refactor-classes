@@ -68,11 +68,34 @@ namespace RefactorClasses.GenerateMoqs
 
             foreach (var p in mi.Parameters)
             {
-                var moqType = GH.GenericName("Mock", p.Type);
+                // TODO: Unwrap lazy
+                var mockedType = GetMockedType(p.Type);
+                var moqType = GH.GenericName("Mock", mockedType);
                 recordBuilder.AddField(moqType, $"{p.Name}Mock", CreateMoq(moqType));
             }
 
             return recordBuilder.Build();
+        }
+
+        /// <summary>
+        /// This method returns original type, or unwrapped type if
+        /// a lazy is passed.
+        /// </summary>
+        /// <param name="type">Parameter type.</param>
+        private static TypeSyntax GetMockedType(TypeSyntax type)
+        {
+            if (type is GenericNameSyntax gns)
+            {
+                if (gns?.Identifier.ValueText == "Lazy")
+                {
+                    var firstArg = gns.TypeArgumentList.Arguments.FirstOrDefault();
+                    return firstArg ?? gns;
+                }
+
+                return type;
+            }
+
+            return type;
         }
     }
 }

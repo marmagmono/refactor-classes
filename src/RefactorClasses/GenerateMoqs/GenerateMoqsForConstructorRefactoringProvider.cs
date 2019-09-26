@@ -1,4 +1,5 @@
 ﻿using System.Composition;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -41,7 +42,7 @@ namespace RefactorClasses.GenerateMoqs
             var parentClass = constructor.Parent.FirstAncestorOrSelf<ClassDeclarationSyntax>();
             if (parentClass == null) return document;
 
-            var classDeclaration = CreateClass(constructor);
+            var classDeclaration = CreateClass(parentClass, constructor);
 
             var tree = await document.GetSyntaxTreeAsync(cancellationToken).ConfigureAwait(false);
             var root = await tree.GetRootAsync(cancellationToken).ConfigureAwait(false);
@@ -51,6 +52,7 @@ namespace RefactorClasses.GenerateMoqs
         }
 
         private static ClassDeclarationSyntax CreateClass(
+            ClassDeclarationSyntax parentClass,
             ConstructorDeclarationSyntax constructor)
         {
             ObjectCreationExpressionSyntax CreateMoq(TypeSyntax moqType) =>
@@ -68,11 +70,12 @@ namespace RefactorClasses.GenerateMoqs
 
             foreach (var p in mi.Parameters)
             {
-                // TODO: Unwrap lazy
                 var mockedType = GetMockedType(p.Type);
                 var moqType = GH.GenericName("Mock", mockedType);
-                recordBuilder.AddField(moqType, $"{p.Name}Mock", CreateMoq(moqType));
+                recordBuilder.AddField(moqType, MockName(p.Name), CreateMoq(moqType));
             }
+
+            recordBuilder.AddMethod(GenerateCreateSut(parentClass, mi));
 
             return recordBuilder.Build();
         }
@@ -97,5 +100,36 @@ namespace RefactorClasses.GenerateMoqs
 
             return type;
         }
+
+        private static MethodDeclarationSyntax GenerateCreateSut(
+            ClassDeclarationSyntax classDeclaration,
+            MethodInspector constructorInspector)
+        {
+            var methodBuilder = new MethodBuilder(GH.IdentifierToken("CreateSut"))
+                .Modifiers(Modifiers.Private);
+
+            var constructorParameters = constructorInspector
+                .Parameters
+                .Select(p => SF.Argument(
+                    EGH.MemberAccess(
+                        EGH.ThisMemberAccess(
+                            GH.Identifier(MockName(p.Name))
+                            ),
+                        GH.Identifier("Object")
+                        )
+                    )
+                );
+
+            methodBuilder.ArrowBody(
+                EGH.Arrow(
+                    EGH.CreateObject(
+                        SF.IdentifierName(classDeclaration.Identifier),
+                        constructorParameters.ToArray())));
+
+            return methodBuilder.Build();
+        }
+
+        private static string MockName(string parameterName) =>
+            $"{parameterName}Mock";
     }
 }

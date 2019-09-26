@@ -57,7 +57,7 @@ namespace RefactorClasses.Analysis.Generators
                 identifierName);
 
         public static MemberAccessExpressionSyntax MemberAccess(
-            IdentifierNameSyntax objectName,
+            ExpressionSyntax objectName,
             IdentifierNameSyntax propertyName) =>
             SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,

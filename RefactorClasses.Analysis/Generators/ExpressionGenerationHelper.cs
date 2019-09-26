@@ -56,6 +56,14 @@ namespace RefactorClasses.Analysis.Generators
                 SyntaxFactory.ThisExpression(),
                 identifierName);
 
+        public static MemberAccessExpressionSyntax MemberAccess(
+            IdentifierNameSyntax objectName,
+            IdentifierNameSyntax propertyName) =>
+            SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                objectName,
+                propertyName);
+
         private static ArgumentListSyntax ToArgList(params ArgumentSyntax[] arguments) =>
             SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments));
     }

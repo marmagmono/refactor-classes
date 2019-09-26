@@ -20,7 +20,7 @@ namespace RefactorClasses.GenerateClassFromMethod
     using GH = GeneratorHelper;
 
     [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = "GenerateClassFromMethod"), Shared]
-    public class ClassFromMethodRefactoringProvider : CodeRefactoringProvider
+    public sealed class ClassFromMethodRefactoringProvider : CodeRefactoringProvider
     {
         public sealed override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
         {

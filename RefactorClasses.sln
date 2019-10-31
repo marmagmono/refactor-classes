@@ -11,9 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.Vsix", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RefactorClasses.RoslynUtils", "src\RefactorClasses.RoslynUtils\RefactorClasses.RoslynUtils.csproj", "{702C29BB-4433-4FFB-8BFC-34A3384EC88C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.Analysis", "RefactorClasses.Analysis\RefactorClasses.Analysis.csproj", "{B377440B-73C8-464A-B553-F2FC2FF5F9D5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RefactorClasses.Analysis", "RefactorClasses.Analysis\RefactorClasses.Analysis.csproj", "{B377440B-73C8-464A-B553-F2FC2FF5F9D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.Analysis.Test", "RefactorClasses.Analysis.Test\RefactorClasses.Analysis.Test.csproj", "{62D5A70C-5046-4CA9-9409-253DACA4F059}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RefactorClasses.Analysis.Test", "RefactorClasses.Analysis.Test\RefactorClasses.Analysis.Test.csproj", "{62D5A70C-5046-4CA9-9409-253DACA4F059}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactorClasses.StateSample", "RefactorClasses.StateSample\RefactorClasses.StateSample.csproj", "{2119D4C4-08AB-4664-8EB0-214838D36A63}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{62D5A70C-5046-4CA9-9409-253DACA4F059}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62D5A70C-5046-4CA9-9409-253DACA4F059}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62D5A70C-5046-4CA9-9409-253DACA4F059}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2119D4C4-08AB-4664-8EB0-214838D36A63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2119D4C4-08AB-4664-8EB0-214838D36A63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2119D4C4-08AB-4664-8EB0-214838D36A63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2119D4C4-08AB-4664-8EB0-214838D36A63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

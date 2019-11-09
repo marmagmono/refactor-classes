@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -8,7 +6,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace RefactorClasses.Analysis.Generators
 {
     using SF = SyntaxFactory;
-    using GH = GeneratorHelper;
     using EGH = ExpressionGenerationHelper;
 
     public class BodyBuilder

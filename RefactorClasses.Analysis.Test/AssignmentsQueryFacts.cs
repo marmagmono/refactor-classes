@@ -1,18 +1,13 @@
-using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using RefactorClasses.Analysis.Inspections;
 using RefactorClasses.Analysis.Inspections.Class;
-using RefactorClasses.Analysis.Inspections.Method.Semantic;
 using Xunit;
 
 namespace RefactorClasses.Analysis.Test
 {
-    public class UnitTest1
+    public class AssignmentsQueryFacts
     {
         [Fact]
         public void Test1()

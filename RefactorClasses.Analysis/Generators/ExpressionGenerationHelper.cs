@@ -1,11 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace RefactorClasses.RoslynUtils.DeclarationGeneration
+namespace RefactorClasses.Analysis.Generators
 {
     public static class ExpressionGenerationHelper
     {
@@ -13,9 +10,6 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
             SyntaxToken leftIdentifier,
             SyntaxToken rightIdentifier)
         {
-            ThrowHelpers.ThrowIfNotIdentifier(nameof(leftIdentifier), leftIdentifier);
-            ThrowHelpers.ThrowIfNotIdentifier(nameof(rightIdentifier), rightIdentifier);
-
             return SimpleAssignment(
                 SyntaxFactory.IdentifierName(leftIdentifier),
                 SyntaxFactory.IdentifierName(rightIdentifier));
@@ -62,7 +56,15 @@ namespace RefactorClasses.RoslynUtils.DeclarationGeneration
                 SyntaxFactory.ThisExpression(),
                 identifierName);
 
+        public static MemberAccessExpressionSyntax MemberAccess(
+            ExpressionSyntax objectName,
+            IdentifierNameSyntax propertyName) =>
+            SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                objectName,
+                propertyName);
+
         private static ArgumentListSyntax ToArgList(params ArgumentSyntax[] arguments) =>
-            SyntaxFactory.ArgumentList(SyntaxHelpers.SeparatedSyntaxList(arguments));
+            SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments));
     }
 }
